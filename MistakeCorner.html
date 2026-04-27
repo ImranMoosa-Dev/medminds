@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mistake Corner - MedMinds MDCAT</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+
+:root {
+    --blue-main: #3b82f6;
+    --blue-dark: #1e3a8a;
+    --blue-soft: #dbeafe;
+    --bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-soft: 0 10px 30px rgba(0,0,0,0.08);
+    --shadow-hover: 0 20px 45px rgba(59,130,246,0.25);
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system;
+    background: radial-gradient(circle at top, #eaf2ff, var(--bg));
+    color: var(--text-main);
+    line-height: 1.7;
+}
+
+/* ===============================
+    HEADER
+ ============================== */
+ header {
+     position: sticky;
+     top: 0;
+     z-index: 1000;
+     background: rgba(255,255,255,0.95);
+     backdrop-filter: blur(14px);
+     padding: 18px 50px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     border-bottom: 1px solid rgba(0,0,0,0.08);
+     position: relative; /* allow absolute logo */
+ }
+
+ /* ===============================
+    LOGO
+ ============================== */
+ .logo-text {
+     display: flex;
+     align-items: center;
+     gap: 15px;
+     position: absolute; /* absolute left alignment */
+     left: 50px;
+     top: 50%;
+     transform: translateY(-50%);
+ }
+
+ .logo-text h1 {
+     font-size: clamp(1.6rem, 5vw, 1.8rem);
+     font-weight: 800;
+     background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+     -webkit-background-clip: text;  /* gradient text */
+     -webkit-text-fill-color: transparent;
+     background-clip: text;
+     color: transparent;
+ }
+
+ .logo-text p {
+     font-size: 0.75rem;
+     color: var(--text-muted);
+ }
+
+ /* ===============================
+    NAVIGATION
+ ============================== */
+ header nav {
+     margin-left: 280px; /* offset nav to avoid overlapping logo */
+ }
+
+ header nav ul {
+     list-style: none;
+     display: flex;
+     gap: 28px;
+ }
+
+header nav a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 600;
+    padding: 10px 22px;
+    border-radius: 999px;
+    transition: all 0.35s ease;
+}
+
+header nav a:hover {
+    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+    color: white;
+    box-shadow: var(--shadow-hover);
+}
+
+/* HAMBURGER */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.hamburger div {
+    width: 25px;
+    height: 3px;
+    background-color: var(--blue-dark);
+    margin: 4px 0;
+}
+
+/* ===============================
+   SECTIONS
+=============================== */
+.section {
+    max-width: 1000px;
+    margin: 90px auto;
+    padding: 50px;
+    background: linear-gradient(145deg, white, var(--blue-soft));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: var(--blue-dark);
+}
+
+.section p {
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+/* ===============================
+   FOOTER
+=============================== */
+footer {
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue-main));
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+/* ===============================
+     MISTAKE ITEMS
+ =============================== */
+ .mistake-item {
+     margin-bottom: 30px;
+     padding: 20px;
+     border-radius: var(--radius);
+     background: linear-gradient(180deg, white, var(--blue-soft));
+     box-shadow: var(--shadow-soft);
+     border: 1px solid rgba(59, 130, 246, 0.1);
+ }
+
+ .mistake-item h4 {
+     margin-bottom: 15px;
+     color: var(--blue-dark);
+     font-size: 1.2em;
+     font-weight: 600;
+ }
+
+ .mistake-item p {
+     margin-bottom: 10px;
+     background: var(--blue-soft);
+     padding: 12px 15px;
+     border-radius: 10px;
+     cursor: default;
+     transition: all 0.3s ease;
+     font-size: 1em;
+     font-weight: 500;
+     color: var(--text-main);
+     border: 2px solid transparent;
+     text-align: left;
+ }
+
+ .mistake-item p.correct {
+     background: #d1fae5;
+     color: #065f46;
+     border-color: #10b981;
+     font-weight: bold;
+ }
+
+ .mistake-item p.wrong {
+     background: #fee2e2;
+     color: #991b1b;
+     border-color: #ef4444;
+     font-weight: bold;
+ }
+
+ .mistake-item p strong {
+     color: var(--blue-dark);
+ }
+
+/* ===============================
+     MOBILE
+ ============================== */
+@media (max-width: 768px) {
+    header {
+        padding: 20px;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .logo-text {
+        position: static;
+        transform: none;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    header nav {
+        margin-left: 0;
+        display: none;
+        width: 100%;
+    }
+
+    header nav.show {
+        display: block;
+    }
+
+    header nav ul {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .section {
+        padding: 30px 20px;
+    }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="logo-text">
+        <div>
+            <h1>MedMinds MDCAT</h1>
+            <p>Your future begins here</p>
+        </div>
+    </div>
+
+    <nav>
+        <ul>
+            <li><a href="home.html"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="statics.html"><i class="fas fa-chart-bar"></i> Statistics</a></li>
+            <li><a href="quiz.html"><i class="fas fa-brain"></i> Quiz</a></li>
+            <li><a href="Q-Bank.html"><i class="fas fa-book"></i> Q-Bank</a></li>
+            <li><a href="student-notes.html"><i class="fas fa-file-alt"></i> Notes</a></li>
+            <li><a href="MistakeCorner.html"><i class="fas fa-exclamation-triangle"></i> Mistake Corner</a></li>
+            <li><a href="#" onclick="confirmLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="hamburger" onclick="toggleNav()">
+        <i class="fas fa-heartbeat"></i>
+    </div>
+</header>
+
+<section class="section">
+    <h2>Mistake Corner</h2>
+    <p>Review your mistakes here. This page shows questions you got wrong in the Q-Bank, helping you learn from errors.</p>
+    <div id="mistake-content">
+        <!-- Mistakes will be inserted here -->
+    </div>
+</section>
+
+<footer>
+    <p>&copy; 2025 MedMinds MDCAT.</p>
+    <p>
+        <i class="fas fa-envelope"></i> 
+        <a href="mailto:admin@medminds.com">admin@medminds.com</a> |
+        <i class="fab fa-whatsapp"></i> 
+        <a href="https://whatsapp.com/channel/0029VbAO9hc7IUYXO5QyIu1E" target="_blank">MedMinds MDCAT Test Session</a> |
+        <i class="fab fa-instagram"></i> 
+        <a href="https://www.instagram.com/medminds_mdcat/" target="_blank">MedMinds MDCAT</a>
+    </p>
+</footer>
+
+<script>
+function confirmLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = '/logout'; // Make sure this exists on your server
+    }
+}
+
+function toggleNav() {
+    document.querySelector('header nav').classList.toggle('show');
+}
+
+async function loadMistakes() {
+    try {
+        const response = await fetch('/api/mistake-corner');
+        const data = await response.json();
+        displayMistakes(data);
+    } catch (error) {
+        console.error('Error loading mistakes:', error);
+        document.getElementById('mistake-content').innerHTML = '<p>Error loading mistakes.</p>';
+    }
+}
+
+function displayMistakes(data) {
+    const content = document.getElementById('mistake-content');
+    let html = '';
+    for (const [subject, questions] of Object.entries(data.subjects)) {
+        html += `<h3>${subject}</h3>`;
+        questions.forEach(q => {
+            html += '<div class="mistake-item">';
+            html += `<h4>${q.question}</h4>`;
+            if (q.image) {
+                html += `<img src="/uploads/${q.image}" alt="Question image" style="max-width: 100%;"><br>`;
+            }
+            for (let i = 1; i <= 4; i++) {
+                const isCorrect = i === q.correct;
+                const isUserAnswer = i === q.userAnswer;
+                let className = '';
+                if (isCorrect) className = 'correct';
+                else if (isUserAnswer) className = 'wrong';
+                html += `<p class="${className}">${String.fromCharCode(64 + i)}. ${q['opt' + i]}</p>`;
+            }
+            if (q.explanation) {
+                html += `<p><strong>Explanation:</strong> ${q.explanation}</p>`;
+            }
+            html += '</div>';
+        });
+    }
+    if (html === '') {
+        html = '<p>No mistakes found. Great job!</p>';
+    }
+    content.innerHTML = html;
+}
+
+loadMistakes();
+</script>
+
+</body>
+</html>
+
