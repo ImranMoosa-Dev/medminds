@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistics – MedMinds</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --blue-dark:  #072f6b;
+      --blue-mid:   #0a4a8f;
+      --blue-main:  #0b63b7;
+      --bg:         #eef3fa;
+      --card:       #ffffff;
+      --border:     #dde8f5;
+      --text:       #0d1f3c;
+      --muted:      #5a6b82;
+      --green:      #16a34a;
+      --green-bg:   #dcfce7;
+      --amber:      #d97706;
+      --amber-bg:   #fef3c7;
+      --red:        #dc2626;
+      --red-bg:     #fee2e2;
+      --radius:     14px;
+      --shadow:     0 4px 24px rgba(10,74,143,0.10);
+      --shadow-lg:  0 8px 40px rgba(10,74,143,0.16);
+    }
+    [data-theme="dark"] {
+      --bg:        #0d1623;
+      --card:      #132039;
+      --border:    #1e3a5f;
+      --text:      #e8f0fe;
+      --muted:     #7fa4cc;
+      --green-bg:  rgba(22,163,74,0.15);
+      --amber-bg:  rgba(217,119,6,0.15);
+      --red-bg:    rgba(220,38,38,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: linear-gradient(135deg, var(--blue-main) 0%, var(--blue-mid) 60%, var(--blue-dark) 100%);
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 4px 20px rgba(11,99,183,0.3);
+    }
+    .header-inner {
+      width: 100%; padding: 0 28px; height: 62px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .brand-logo { width: 34px; height: 34px; }
+    .brand-name { font-family: 'Merriweather', serif; font-size: 20px; font-weight: 900; color: #fff; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a {
+      color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13px; font-weight: 600;
+      padding: 7px 13px; border-radius: 8px; transition: background 0.2s; white-space: nowrap;
+    }
+    .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.15); color: #fff; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .theme-btn {
+      background: rgba(255,255,255,0.15); border: none; border-radius: 8px;
+      padding: 7px 10px; cursor: pointer; font-size: 16px; color: white; transition: background 0.2s;
+    }
+    .theme-btn:hover { background: rgba(255,255,255,0.25); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: #fff; border-radius: 2px; transition: transform 0.3s, opacity 0.3s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav { display: none; flex-direction: column; background: var(--blue-dark); border-top: 1px solid rgba(255,255,255,0.1); }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; font-weight: 600; padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.2s; }
+    .mobile-nav a:hover { background: rgba(255,255,255,0.08); }
+
+    /* ── MAIN ── */
+    main { width: 100%; padding: 28px 28px 48px; }
+
+    /* ── PAGE TITLE ── */
+    .page-title { text-align: center; margin-bottom: 28px; animation: fadeUp 0.45s ease both; }
+    .page-title h1 { font-family: 'Merriweather', serif; font-size: clamp(20px, 4vw, 28px); font-weight: 900; color: var(--text); margin-bottom: 6px; }
+    .page-title p { color: var(--muted); font-size: 14px; }
+
+    /* ── STAT CARDS ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 24px; animation: fadeUp 0.45s 0.08s ease both;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 16px; display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .stat-icon {
+      font-size: 24px; flex-shrink: 0; width: 46px; height: 46px;
+      background: linear-gradient(135deg, rgba(11,99,183,0.1), rgba(11,99,183,0.05));
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+    .stat-value { font-family: 'Merriweather', serif; font-size: 22px; font-weight: 700; color: var(--blue-main); line-height: 1; }
+    .stat-unit  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+      animation: fadeUp 0.45s 0.12s ease both;
+    }
+    .card + .card { animation-delay: 0.18s; }
+    .card-header { padding: 18px 24px 16px; border-bottom: 1px solid var(--border); }
+    .card-header h2 { font-family: 'Merriweather', serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .card-body { padding: 24px; }
+
+    /* ── CHARTS ── */
+    .chart-wrap { position: relative; height: 300px; }
+    .chart-wrap-sm { position: relative; height: 260px; width: 260px; margin: 0 auto; }
+
+    .dist-grid {
+      display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: center;
+    }
+
+    .dist-legend { display: flex; flex-direction: column; gap: 14px; }
+    .dist-legend-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .dist-legend-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+    .dist-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .dist-count { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 700; color: var(--blue-main); }
+
+    /* ── TABLE ── */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 480px; }
+    .data-table thead tr { background: linear-gradient(135deg, var(--blue-main), var(--blue-mid)); }
+    .data-table th { padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; }
+    .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: background 0.15s; }
+    .data-table tbody tr:hover td { background: rgba(11,99,183,0.03); }
+    .data-table tbody tr.locked { opacity: 0.5; }
+
+    /* Score bar */
+    .score-bar { display: flex; align-items: center; gap: 10px; }
+    .score-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; min-width: 60px; }
+    .score-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--blue-main), var(--blue-mid)); transition: width 0.6s ease; }
+    .score-pct   { font-size: 12px; font-weight: 700; color: var(--blue-main); white-space: nowrap; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .badge-done      { background: var(--green-bg); color: var(--green); }
+    .badge-available { background: var(--amber-bg); color: var(--amber); }
+    .badge-locked    { background: var(--bg);        color: var(--muted); border: 1px solid var(--border); }
+
+    /* Trend */
+    .trend { font-size: 12px; font-weight: 700; }
+    .trend-up     { color: var(--green); }
+    .trend-mid    { color: var(--amber); }
+    .trend-down   { color: var(--red); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* Skeleton */
+    .skel { display: inline-block; background: linear-gradient(90deg, var(--border) 25%, rgba(200,215,235,0.4) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @keyframes fadeUp  { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .dist-grid  { grid-template-columns: 1fr; }
+      .chart-wrap-sm { width: 100%; max-width: 260px; }
+    }
+    @media (max-width: 768px) {
+      main { padding: 16px 16px 40px; }
+      .hamburger { display: flex; }
+      .nav-links  { display: none; }
+      .card-body  { padding: 16px; }
+      .card-header { padding: 14px 16px 12px; }
+    }
+    @media (max-width: 520px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stat-card  { padding: 14px 12px; gap: 10px; }
+      .stat-value { font-size: 18px; }
+      .stat-icon  { width: 38px; height: 38px; font-size: 20px; }
+    }
+
+  /* ── IMPROVEMENT GRAPH ── */
+  .improvement-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .trend-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  }
+  .trend-badge.improving  { background: var(--green-bg); color: var(--green); }
+  .trend-badge.declining  { background: var(--red-bg);   color: var(--red);   }
+  .trend-badge.stable     { background: var(--amber-bg); color: var(--amber); }
+  .trend-badge.no-data    { background: var(--bg);       color: var(--muted); border: 1px solid var(--border); }
+
+  .improvement-meta {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    padding: 14px 24px; border-top: 1px solid var(--border);
+    background: rgba(11,99,183,0.02);
+  }
+  .impr-stat { text-align: center; }
+  .impr-stat-val { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 700; color: var(--blue-main); }
+  .impr-stat-lbl { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
+
+  /* ── PRINT PROTECTION ── */
+  @media print {
+    body * { display: none !important; visibility: hidden !important; }
+    body::after {
+      display: block !important;
+      visibility: visible !important;
+      content: "MedMinds content printing is not allowed.";
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 80px;
+      color: #000;
+      font-family: Arial, sans-serif;
+    }
+  }
+  </style>
+</head>
+<body>
+
+  <script>
+    (function () {
+      const saved = localStorage.getItem('medminds-theme');
+      const dark  = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', saved || (dark ? 'dark' : 'light'));
+    })();
+  </script>
+
+  <!-- script.js declares supabaseClient -->
+  <script src="script.js"></script>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="quiz-selection.html" class="brand">
+        <svg class="brand-logo" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 72 Q60 96 100 72" stroke="rgba(255,255,255,0.8)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <circle cx="100" cy="72" r="5.5" fill="rgba(255,255,255,0.8)"/>
+          <circle cx="20"  cy="72" r="3"   fill="rgba(255,255,255,0.6)"/>
+          <rect x="22" y="18" width="22" height="48" rx="4" fill="rgba(255,255,255,0.95)"/>
+          <rect x="10" y="30" width="46" height="22" rx="4" fill="rgba(255,255,255,0.95)"/>
+          <path d="M56 22 C62 16 72 18 82 20 C90 26 92 36 94 44 C90 52 86 56 82 60 C76 64 68 64 62 64 C56 60 56 56 56 56 Z" fill="rgba(255,255,255,0.92)"/>
+          <line x1="68" y1="20" x2="68" y2="62" stroke="#0a4a8f" stroke-width="2"   stroke-linecap="round"/>
+          <line x1="56" y1="38" x2="90" y2="38" stroke="#0a4a8f" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="68" cy="26" r="3"   fill="#0a4a8f"/><circle cx="68" cy="38" r="3"   fill="#0a4a8f"/>
+          <circle cx="68" cy="50" r="3"   fill="#0a4a8f"/><circle cx="78" cy="38" r="3"   fill="#0a4a8f"/>
+          <circle cx="88" cy="38" r="2.5" fill="#0a4a8f"/><circle cx="60" cy="38" r="2.5" fill="#0a4a8f"/>
+          <line x1="68" y1="26" x2="78" y2="22" stroke="#0a4a8f" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="68" y1="50" x2="78" y2="54" stroke="#0a4a8f" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="78" cy="22" r="2.5" fill="#0a4a8f"/><circle cx="78" cy="54" r="2.5" fill="#0a4a8f"/>
+        </svg>
+        <span class="brand-name">MedMinds</span>
+      </a>
+      <div class="header-right">
+        <nav class="nav-links">
+       <a href="quiz-selection.html">🏠 Dashboard</a>
+    <a href="create-test.html">🧪 Create Test</a>
+    <a href="custom-history.html">Quiz History</a>
+    <a href="stats.html">📊 My Stats</a>
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="my-batch.html">My Batch</a>
+    <a href="profile.html">👤 Profile</a>
+        </nav>
+        <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="mobileNav">
+      <a href="quiz-selection.html">🏠 Dashboard</a>
+    <a href="create-test.html">🧪 Create Test</a>
+    <a href="custom-history.html">Quiz History</a>
+    <a href="stats.html">📊 My Stats</a>
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="my-batch.html">My Batch</a>
+    <a href="profile.html">👤 Profile</a>
+    </nav>
+  </header>
+
+  <!-- ═══ MAIN ═══ -->
+  <main>
+
+    <!-- Page title -->
+    <div class="page-title">
+      <h1>📊 Your Statistics</h1>
+      <p>Track your performance and progress across all quizzes</p>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div>
+          <div class="stat-label">Overall Average</div>
+          <div class="stat-value" id="statAvg">—</div>
+          <div class="stat-unit">percent</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div>
+          <div class="stat-label">Quizzes Taken</div>
+          <div class="stat-value" id="statCount">—</div>
+          <div class="stat-unit">attempts</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div>
+          <div class="stat-label">Highest Score</div>
+          <div class="stat-value" id="statBest">—</div>
+          <div class="stat-unit">percent</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📉</div>
+        <div>
+          <div class="stat-label">Lowest Score</div>
+          <div class="stat-value" id="statWorst">—</div>
+          <div class="stat-unit">percent</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance chart -->
+    <div class="card">
+      <div class="card-header"><h2>📈 Performance Per Quiz</h2></div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="perfChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Improvement Trend Graph -->
+    <div class="card">
+      <div class="card-header">
+        <div class="improvement-header">
+          <h2>🚀 Improvement Trend</h2>
+          <span class="trend-badge no-data" id="improvementBadge">— No data yet</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="improvementChart"></canvas>
+        </div>
+      </div>
+      <div class="improvement-meta">
+        <div class="impr-stat">
+          <div class="impr-stat-val" id="imprFirst">—</div>
+          <div class="impr-stat-lbl">First Quiz</div>
+        </div>
+        <div class="impr-stat">
+          <div class="impr-stat-val" id="imprLatest">—</div>
+          <div class="impr-stat-lbl">Latest Quiz</div>
+        </div>
+        <div class="impr-stat">
+          <div class="impr-stat-val" id="imprChange">—</div>
+          <div class="impr-stat-lbl">Total Change</div>
+        </div>
+        <div class="impr-stat">
+          <div class="impr-stat-val" id="imprAvgLast3">—</div>
+          <div class="impr-stat-lbl">Last 3 Avg</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score distribution -->
+    <div class="card">
+      <div class="card-header"><h2>📊 Score Distribution</h2></div>
+      <div class="card-body">
+        <div class="dist-grid">
+          <div class="chart-wrap-sm">
+            <canvas id="distChart"></canvas>
+          </div>
+          <div class="dist-legend">
+            <div class="dist-legend-item">
+              <div class="dist-legend-label">
+                <div class="dist-dot" style="background:#16a34a;"></div>
+                Excellent (80%+)
+              </div>
+              <div class="dist-count" id="cntExcellent">0</div>
+            </div>
+            <div class="dist-legend-item">
+              <div class="dist-legend-label">
+                <div class="dist-dot" style="background:#d97706;"></div>
+                Good (60–79%)
+              </div>
+              <div class="dist-count" id="cntGood">0</div>
+            </div>
+            <div class="dist-legend-item">
+              <div class="dist-legend-label">
+                <div class="dist-dot" style="background:#dc2626;"></div>
+                Needs Work (&lt;60%)
+              </div>
+              <div class="dist-count" id="cntPoor">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subject-wise Stats -->
+    <div class="card" id="subjectStatsCard" style="display:none;">
+      <div class="card-header"><h2>🧪 Subject-wise Performance</h2></div>
+      <div id="subjectStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:20px;"></div>
+      <div style="padding:0 20px 20px;">
+        <canvas id="subjectRadarChart" style="max-height:320px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Quiz details table -->
+    <div class="card">
+      <div class="card-header"><h2>📋 Quiz Details</h2></div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Quiz</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Performance</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="quizTableBody">
+            <tr><td colspan="6">
+              <div class="empty-state"><div class="icon">⏳</div><p>Loading…</p></div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ── Theme ──
+    const themeBtn = document.getElementById('themeBtn');
+    const getTheme = () => document.documentElement.getAttribute('data-theme') || 'light';
+    const setTheme = t => {
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('medminds-theme', t);
+      themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+      // Redraw charts on theme change so colors update
+      if (window._chartsReady) { buildCharts(window._lastStats); buildSubjectStats(window._lastStats); }
+    };
+    setTheme(getTheme());
+    themeBtn.addEventListener('click', () => setTheme(getTheme() === 'dark' ? 'light' : 'dark'));
+
+    // ── Hamburger ──
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav  = document.getElementById('mobileNav');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+    });
+
+    // ── Chart instances ──
+    let perfChartInst = null;
+    let distChartInst = null;
+    let imprChartInst = null;
+    let subjectChartInst = null;
+    window._chartsReady = false;
+
+    // ══════════════════════════════════════════════════════
+    // INIT — auth guard
+    // ══════════════════════════════════════════════════════
+    async function initStats() {
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) { window.location.href = 'index.html'; return; }
+        await loadStatistics(user.id);
+      } catch (e) {
+        console.error('Init error:', e);
+      }
+    }
+
+    // ══════════════════════════════════════════════════════
+    // LOAD DATA — reads from quiz_attempts + quizzes tables
+    // ══════════════════════════════════════════════════════
+    async function loadStatistics(userId) {
+      try {
+        // 1. Fetch this user's attempts (ordered oldest→newest for the chart)
+        const { data: attempts, error: attErr } = await supabaseClient
+          .from('quiz_attempts')
+          .select('id, score, total, quiz_id, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true });
+
+        if (attErr) throw attErr;
+
+        // 2. Fetch all published quizzes (to show locked/available rows)
+        const { data: allQuizzes } = await supabaseClient
+          .from('quizzes')
+          .select('id, name, quiz_order, subjects')
+          .eq('is_published', true)
+          .order('quiz_order', { ascending: true });
+
+        // 3. Fetch quiz names for taken quizzes
+        let quizNames = {};
+        let quizSubjectsMap = {}; // quizId -> subjects array
+        try {
+          const ids = [...new Set((attempts || []).map(a => a.quiz_id).filter(Boolean))];
+          if (ids.length) {
+            const { data: qz } = await supabaseClient.from('quizzes').select('id, name, subjects').in('id', ids);
+            (qz || []).forEach(q => {
+              quizNames[q.id] = q.name;
+              quizSubjectsMap[q.id] = q.subjects || [];
+            });
+          }
+        } catch {}
+
+        // 4. Build subject-wise stats from quiz_attempts.answers JSON
+        // (answers stored as { "0": "a", "1": "c", ... } keyed by 0-based question index)
+        let subjectStats = {}; // subject -> { correct, total }
+        try {
+          const completedAttempts = (attempts || []).filter(a => a.quiz_id);
+          if (completedAttempts.length) {
+            const quizIds = [...new Set(completedAttempts.map(a => a.quiz_id))];
+
+            // Fetch all questions for these quizzes, ordered by id (preserves insertion order = index)
+            const { data: allQuestions } = await supabaseClient
+              .from('questions')
+              .select('id, quiz_id, correct_answer, subject')
+              .in('quiz_id', quizIds)
+              .order('id', { ascending: true });
+
+            // Fetch full attempt rows (need answers JSON — the base select only has score/total)
+            const attemptIds = completedAttempts.map(a => a.id);
+            const { data: fullAttempts } = await supabaseClient
+              .from('quiz_attempts')
+              .select('id, quiz_id, answers')
+              .in('id', attemptIds);
+
+            if (allQuestions && fullAttempts) {
+              // Build per-quiz question list (0-indexed position matches answers key)
+              const quizQuestionsMap = {};
+              allQuestions.forEach(q => {
+                if (!quizQuestionsMap[q.quiz_id]) quizQuestionsMap[q.quiz_id] = [];
+                quizQuestionsMap[q.quiz_id].push(q);
+              });
+
+              fullAttempts.forEach(attempt => {
+                const answersObj = attempt.answers || {};
+                const qs = quizQuestionsMap[attempt.quiz_id] || [];
+                qs.forEach((q, idx) => {
+                  if (!q.subject) return; // skip untagged
+                  const userAnswer = answersObj[String(idx)];
+                  if (!subjectStats[q.subject]) subjectStats[q.subject] = { correct: 0, total: 0 };
+                  subjectStats[q.subject].total++;
+                  if (userAnswer === q.correct_answer) subjectStats[q.subject].correct++;
+                });
+              });
+            }
+          }
+        } catch(e) { console.warn('Subject stats fetch failed:', e); }
+
+        // 4. Compute stats
+        const pcts = (attempts || []).map(a => a.total > 0 ? Math.round((a.score / a.total) * 100) : 0);
+        const count     = pcts.length;
+        const avg       = count ? Math.round(pcts.reduce((s, v) => s + v, 0) / count) : null;
+        const best      = count ? Math.max(...pcts) : null;
+        const worst     = count ? Math.min(...pcts) : null;
+        const excellent = pcts.filter(p => p >= 80).length;
+        const good      = pcts.filter(p => p >= 60 && p < 80).length;
+        const poor      = pcts.filter(p => p < 60).length;
+
+        const stats = { attempts: attempts || [], allQuizzes: allQuizzes || [], quizNames, pcts, count, avg, best, worst, excellent, good, poor, subjectStats };
+        window._lastStats = stats;
+
+        // 5. Update UI
+        updateCards(stats);
+        buildCharts(stats);
+        buildTable(stats);
+        buildSubjectStats(stats);
+        window._chartsReady = true;
+
+      } catch (e) {
+        console.error('loadStatistics error:', e);
+        document.getElementById('quizTableBody').innerHTML =
+          '<tr><td colspan="6"><div class="empty-state"><div class="icon">❌</div><p>Failed to load data.</p></div></td></tr>';
+      }
+    }
+
+    // ── Stat Cards ──
+    function updateCards(s) {
+      document.getElementById('statAvg').textContent   = s.avg  !== null ? s.avg  + '%' : '—';
+      document.getElementById('statCount').textContent  = s.count || '0';
+      document.getElementById('statBest').textContent  = s.best  !== null ? s.best  + '%' : '—';
+      document.getElementById('statWorst').textContent = s.worst !== null ? s.worst + '%' : '—';
+    }
+
+    // ── Charts ──
+    function chartTextColor() {
+      return getTheme() === 'dark' ? '#7fa4cc' : '#666';
+    }
+    function chartGridColor() {
+      return getTheme() === 'dark' ? 'rgba(255,255,255,0.06)' : '#f0f0f0';
+    }
+
+    function buildCharts(s) {
+      // ── Bar chart: score per attempt ──
+      const labels = s.attempts.map((a, i) => {
+        const name = s.quizNames[a.quiz_id] || `Quiz ${i + 1}`;
+        // Truncate long names on small screens
+        return name.length > 14 ? name.slice(0, 13) + '…' : name;
+      });
+      const data = s.pcts;
+
+      const barColors = data.map(p =>
+        p >= 80 ? 'rgba(22,163,74,0.85)' :
+        p >= 60 ? 'rgba(217,119,6,0.85)' :
+                  'rgba(220,38,38,0.85)'
+      );
+      const borderColors = data.map(p =>
+        p >= 80 ? '#16a34a' : p >= 60 ? '#d97706' : '#dc2626'
+      );
+
+      if (perfChartInst) { perfChartInst.destroy(); perfChartInst = null; }
+
+      const perfCtx = document.getElementById('perfChart').getContext('2d');
+      perfChartInst = new Chart(perfCtx, {
+        type: 'bar',
+        data: {
+          labels: labels.length ? labels : ['No data yet'],
+          datasets: [{
+            label: 'Score %',
+            data: data.length ? data : [0],
+            backgroundColor: barColors.length ? barColors : ['rgba(11,99,183,0.3)'],
+            borderColor:     borderColors.length ? borderColors : ['#0b63b7'],
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.parsed.y}%`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true, max: 100,
+              ticks: { callback: v => v + '%', color: chartTextColor(), font: { size: 11 } },
+              grid: { color: chartGridColor() }
+            },
+            x: {
+              ticks: { color: chartTextColor(), font: { size: 11 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      // ── Doughnut chart: distribution ──
+      if (distChartInst) { distChartInst.destroy(); distChartInst = null; }
+
+      const distCtx = document.getElementById('distChart').getContext('2d');
+      const hasData = s.excellent + s.good + s.poor > 0;
+      distChartInst = new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Excellent (80%+)', 'Good (60–79%)', 'Needs Work (<60%)'],
+          datasets: [{
+            data: hasData ? [s.excellent, s.good, s.poor] : [1, 0, 0],
+            backgroundColor: hasData
+              ? ['rgba(22,163,74,0.85)', 'rgba(217,119,6,0.85)', 'rgba(220,38,38,0.85)']
+              : ['rgba(200,215,235,0.4)'],
+            borderColor:     hasData
+              ? ['#16a34a', '#d97706', '#dc2626']
+              : ['#dde8f5'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: hasData }
+          }
+        }
+      });
+
+
+      // ── Line chart: improvement trend ──
+      if (imprChartInst) { imprChartInst.destroy(); imprChartInst = null; }
+
+      const imprCtx = document.getElementById('improvementChart').getContext('2d');
+      const imprLabels = s.attempts.map((a, i) => {
+        const name = s.quizNames[a.quiz_id] || ('Quiz ' + (i + 1));
+        return name.length > 12 ? name.slice(0, 11) + '…' : name;
+      });
+      const imprData = s.pcts;
+
+      // Moving average (window of 2) for trend line
+      const movingAvg = imprData.map((_, i) => {
+        if (i === 0) return imprData[0];
+        const window = imprData.slice(Math.max(0, i - 1), i + 1);
+        return Math.round(window.reduce((a, b) => a + b, 0) / window.length);
+      });
+
+      // Determine trend
+      const badge = document.getElementById('improvementBadge');
+      if (imprData.length >= 2) {
+        const first  = imprData[0];
+        const last   = imprData[imprData.length - 1];
+        const diff   = last - first;
+        const last3  = imprData.slice(-3);
+        const avgL3  = Math.round(last3.reduce((a,b)=>a+b,0)/last3.length);
+
+        document.getElementById('imprFirst').textContent   = first + '%';
+        document.getElementById('imprLatest').textContent  = last  + '%';
+        document.getElementById('imprChange').textContent  = (diff >= 0 ? '+' : '') + diff + '%';
+        document.getElementById('imprAvgLast3').textContent = avgL3 + '%';
+
+        // Color the change value
+        const changeEl = document.getElementById('imprChange');
+        changeEl.style.color = diff > 0 ? 'var(--green)' : diff < 0 ? 'var(--red)' : 'var(--amber)';
+
+        if (diff > 5) {
+          badge.className = 'trend-badge improving';
+          badge.textContent = '📈 Improving';
+        } else if (diff < -5) {
+          badge.className = 'trend-badge declining';
+          badge.textContent = '📉 Declining';
+        } else {
+          badge.className = 'trend-badge stable';
+          badge.textContent = '➡️ Stable';
+        }
+      } else if (imprData.length === 1) {
+        document.getElementById('imprFirst').textContent   = imprData[0] + '%';
+        document.getElementById('imprLatest').textContent  = imprData[0] + '%';
+        document.getElementById('imprChange').textContent  = '—';
+        document.getElementById('imprAvgLast3').textContent = imprData[0] + '%';
+        badge.className = 'trend-badge stable';
+        badge.textContent = '➡️ 1 Quiz Taken';
+      }
+
+      // Gradient fill for line chart
+      const gradientFill = imprCtx.createLinearGradient(0, 0, 0, 300);
+      gradientFill.addColorStop(0,   'rgba(11,99,183,0.25)');
+      gradientFill.addColorStop(1,   'rgba(11,99,183,0.01)');
+
+      imprChartInst = new Chart(imprCtx, {
+        type: 'line',
+        data: {
+          labels: imprLabels.length ? imprLabels : ['No data'],
+          datasets: [
+            {
+              label: 'Score %',
+              data: imprData.length ? imprData : [0],
+              borderColor: '#0b63b7',
+              backgroundColor: gradientFill,
+              borderWidth: 3,
+              pointBackgroundColor: imprData.map(p =>
+                p >= 80 ? '#16a34a' : p >= 60 ? '#d97706' : '#dc2626'
+              ),
+              pointBorderColor: '#fff',
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: 'Trend',
+              data: movingAvg.length ? movingAvg : [0],
+              borderColor: 'rgba(217,119,6,0.7)',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              tension: 0.4,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: chartTextColor(),
+                font: { size: 11, weight: '600' },
+                boxWidth: 14,
+                padding: 16
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y + '%'
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: Math.max(0,  Math.min(...(imprData.length ? imprData : [0])) - 10),
+              max: Math.min(100, Math.max(...(imprData.length ? imprData : [100])) + 10),
+              ticks: { callback: v => v + '%', color: chartTextColor(), font: { size: 11 } },
+              grid: { color: chartGridColor() }
+            },
+            x: {
+              ticks: { color: chartTextColor(), font: { size: 11 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      document.getElementById('cntExcellent').textContent = s.excellent;
+      document.getElementById('cntGood').textContent      = s.good;
+      document.getElementById('cntPoor').textContent      = s.poor;
+    }
+
+    // ── Subject-wise Stats ──
+    const SUBJ_META = {
+      'Biology':           { icon:'🧬', color:'#16a34a', bg:'#dcfce7' },
+      'Chemistry':         { icon:'⚗️', color:'#0b63b7', bg:'#dbeafe' },
+      'Physics':           { icon:'⚡', color:'#7c3aed', bg:'#ede9fe' },
+      'English':           { icon:'📖', color:'#d97706', bg:'#fef3c7' },
+      'Logical Reasoning': { icon:'🧠', color:'#dc2626', bg:'#fee2e2' }
+    };
+
+    function buildSubjectStats(s) {
+      const card = document.getElementById('subjectStatsCard');
+      const grid = document.getElementById('subjectStatsGrid');
+      const subjStats = s.subjectStats || {};
+      const subjects  = Object.keys(subjStats);
+
+      if (!subjects.length) { card.style.display = 'none'; return; }
+      card.style.display = 'block';
+
+      // Cards per subject
+      grid.innerHTML = subjects.map(subj => {
+        const data = subjStats[subj];
+        const pct  = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+        const m    = SUBJ_META[subj] || { icon:'📚', color:'#666', bg:'#f3f4f6' };
+        const trendClass = pct >= 80 ? '#16a34a' : pct >= 60 ? '#d97706' : '#dc2626';
+        return `
+          <div style="background:${m.bg};border-radius:14px;padding:16px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:6px;">${m.icon}</div>
+            <div style="font-size:12px;font-weight:700;color:${m.color};margin-bottom:8px;">${subj}</div>
+            <div style="font-size:26px;font-weight:800;color:${trendClass};">${pct}%</div>
+            <div style="font-size:11px;color:#666;margin-top:4px;">${data.correct}/${data.total} correct</div>
+            <div style="margin-top:8px;background:rgba(0,0,0,0.08);border-radius:4px;height:6px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:${m.color};border-radius:4px;transition:width 0.8s;"></div>
+            </div>
+          </div>`;
+      }).join('');
+
+      // Radar chart
+      if (subjectChartInst) { subjectChartInst.destroy(); subjectChartInst = null; }
+      if (subjects.length < 2) return;
+
+      const ctx = document.getElementById('subjectRadarChart').getContext('2d');
+      subjectChartInst = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: subjects.map(s => SUBJ_META[s]?.icon + ' ' + s),
+          datasets: [{
+            label: 'Your Score %',
+            data: subjects.map(subj => {
+              const d = subjStats[subj];
+              return d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0;
+            }),
+            backgroundColor: 'rgba(11,99,183,0.15)',
+            borderColor: '#0b63b7',
+            borderWidth: 2,
+            pointBackgroundColor: subjects.map(subj => {
+              const pct = subjStats[subj]?.total > 0
+                ? Math.round((subjStats[subj].correct / subjStats[subj].total) * 100) : 0;
+              return pct >= 80 ? '#16a34a' : pct >= 60 ? '#d97706' : '#dc2626';
+            }),
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0, max: 100,
+              ticks: { stepSize: 20, callback: v => v+'%', font: { size: 10 }, color: chartTextColor() },
+              grid: { color: chartGridColor() },
+              pointLabels: { font: { size: 12, weight: '600' }, color: chartTextColor() }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.r + '%' } }
+          }
+        }
+      });
+    }
+
+    // ── Table ──
+    function buildTable(s) {
+      const tbody = document.getElementById('quizTableBody');
+
+      if (s.count === 0 && s.allQuizzes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+          <div class="empty-state"><div class="icon">📝</div><p>No quizzes taken yet. Start a quiz to see your stats!</p></div>
+        </td></tr>`;
+        return;
+      }
+
+      // Build a map of taken quiz_ids for quick lookup
+      const takenIds = new Set(s.attempts.map(a => a.quiz_id));
+      let rows = '';
+
+      // Taken attempts (sorted newest first for table display)
+      const sorted = [...s.attempts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      sorted.forEach((a, i) => {
+        const pct  = a.total > 0 ? Math.round((a.score / a.total) * 100) : 0;
+        const name = s.quizNames[a.quiz_id] || (a.quiz_id ? `Quiz #${a.quiz_id}` : 'Quiz');
+        const date = a.created_at
+          ? new Date(a.created_at).toLocaleDateString('en-PK', { day:'numeric', month:'short', year:'numeric' })
+          : '—';
+
+        const trendClass = pct >= 80 ? 'trend-up' : pct >= 60 ? 'trend-mid' : 'trend-down';
+        const trendText  = pct >= 80 ? '📈 Excellent' : pct >= 60 ? '➡️ Good' : '📉 Needs Work';
+
+        rows += `<tr>
+          <td style="color:var(--muted);font-size:12px;">${i + 1}</td>
+          <td style="font-weight:600;">${name}</td>
+          <td><span class="badge badge-done">✅ Completed</span></td>
+          <td>
+            <div class="score-bar">
+              <div class="score-track"><div class="score-fill" style="width:${pct}%;"></div></div>
+              <span class="score-pct">${pct}%</span>
+            </div>
+          </td>
+          <td><span class="trend ${trendClass}">${trendText}</span></td>
+          <td style="color:var(--muted);font-size:12px;white-space:nowrap;">${date}</td>
+        </tr>`;
+      });
+
+      // Available/locked quizzes not yet taken
+      s.allQuizzes.forEach((q, idx) => {
+        if (takenIds.has(q.id)) return; // already shown above
+        const isNext   = idx === s.count; // next one to take
+        const badgeCls = isNext ? 'badge-available' : 'badge-locked';
+        const badgeTxt = isNext ? '▶️ Available' : '🔒 Locked';
+
+        rows += `<tr class="locked">
+          <td style="color:var(--muted);font-size:12px;">—</td>
+          <td style="font-weight:600;">${q.name}</td>
+          <td><span class="badge ${badgeCls}">${badgeTxt}</span></td>
+          <td style="color:var(--muted);">—</td>
+          <td style="color:var(--muted);">—</td>
+          <td style="color:var(--muted);">—</td>
+        </tr>`;
+      });
+
+      tbody.innerHTML = rows || `<tr><td colspan="6">
+        <div class="empty-state"><div class="icon">📝</div><p>No attempts yet.</p></div>
+      </td></tr>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', initStats);
+  </script>
+</body>
+</html>

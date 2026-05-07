@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Custom Test – MedMinds</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue-dark: #072f6b; --blue-mid: #0a4a8f; --blue-main: #0b63b7;
+      --bg: #eef3fa; --card: #ffffff; --border: #dde8f5;
+      --text: #0d1f3c; --muted: #5a6b82;
+      --green: #16a34a; --green-bg: #dcfce7;
+      --amber: #d97706; --amber-bg: #fef3c7;
+      --red: #dc2626; --red-bg: #fee2e2;
+      --purple: #7c3aed; --purple-bg: #ede9fe;
+      --radius: 14px; --shadow: 0 4px 24px rgba(10,74,143,.10);
+      --shadow-lg: 0 8px 40px rgba(10,74,143,.16);
+    }
+    [data-theme="dark"] {
+      --bg: #0d1623; --card: #132039; --border: #1e3a5f;
+      --text: #e8f0fe; --muted: #7fa4cc;
+      --green-bg: rgba(22,163,74,.15); --amber-bg: rgba(217,119,6,.15);
+      --red-bg: rgba(220,38,38,.15); --purple-bg: rgba(124,58,237,.15);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background .3s, color .3s; }
+
+    /* ── HEADER ── */
+    .site-header { background: linear-gradient(135deg,var(--blue-main) 0%,var(--blue-mid) 60%,var(--blue-dark) 100%); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(11,99,183,.3); }
+    .header-inner { width: 100%; padding: 0 28px; height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .brand-logo { width: 34px; height: 34px; border-radius: 8px; }
+    .brand-name { font-family: 'Merriweather', serif; font-size: 20px; font-weight: 900; color: #fff; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { color: rgba(255,255,255,.85); text-decoration: none; font-size: 13px; font-weight: 600; padding: 7px 13px; border-radius: 8px; transition: background .2s; white-space: nowrap; }
+    .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,.15); color: #fff; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .theme-btn { background: rgba(255,255,255,.15); border: none; border-radius: 8px; padding: 7px 10px; cursor: pointer; font-size: 16px; color: white; transition: background .2s; }
+    .theme-btn:hover { background: rgba(255,255,255,.25); }
+    .logout-btn-hdr { background: rgba(220,38,38,.85); color: white; border: none; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .2s; }
+    .logout-btn-hdr:hover { background: #dc2626; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 6px; }
+    .hamburger span { display: block; width: 22px; height: 2px; background: #fff; border-radius: 2px; transition: transform .3s, opacity .3s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-nav { display: none; flex-direction: column; background: var(--blue-dark); border-top: 1px solid rgba(255,255,255,.1); }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { color: rgba(255,255,255,.85); text-decoration: none; font-size: 14px; font-weight: 600; padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .mobile-nav a:hover { background: rgba(255,255,255,.08); }
+    .mobile-nav-logout { background: none; border: none; color: #fca5a5; font-size: 14px; font-weight: 600; padding: 14px 24px; text-align: left; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+    /* ── MAIN ── */
+    main { width: 100%; padding: 28px 28px 60px; max-width: 860px; margin: 0 auto; }
+
+    /* ── TRIAL BANNER ── */
+    .trial-banner { background: linear-gradient(135deg,#fef3c7,#fde68a); border: 1.5px solid #f59e0b; border-radius: var(--radius); padding: 14px 20px; margin-bottom: 22px; display: flex; align-items: center; gap: 12px; animation: fadeUp .4s ease; }
+    .trial-banner .tb-icon { font-size: 24px; flex-shrink: 0; }
+    .trial-banner .tb-text { font-size: 13px; color: #92400e; line-height: 1.5; }
+    .trial-banner .tb-text strong { font-weight: 700; }
+
+    /* ── BLOCKED STATE ── */
+    .blocked-card { background: var(--card); border: 1.5px solid var(--red); border-radius: var(--radius); padding: 40px; text-align: center; box-shadow: var(--shadow); animation: fadeUp .4s ease; }
+    .blocked-card .b-icon { font-size: 48px; margin-bottom: 16px; }
+    .blocked-card h2 { font-family: 'Merriweather', serif; font-size: 20px; color: var(--red); margin-bottom: 10px; }
+    .blocked-card p { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 22px; }
+    .blocked-card a { display: inline-block; background: var(--blue-main); color: white; padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; }
+
+    /* ── STEPPER ── */
+    .stepper { display: flex; align-items: center; gap: 0; margin-bottom: 30px; animation: fadeUp .4s ease; }
+    .step-item { display: flex; align-items: center; flex: 1; }
+    .step-item:last-child { flex: 0; }
+    .step-circle { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--muted); flex-shrink: 0; transition: all .3s; position: relative; z-index: 1; }
+    .step-circle.active { border-color: var(--blue-main); background: var(--blue-main); color: white; box-shadow: 0 0 0 4px rgba(11,99,183,.18); }
+    .step-circle.done { border-color: var(--green); background: var(--green); color: white; }
+    .step-line { flex: 1; height: 2px; background: var(--border); margin: 0 4px; transition: background .3s; }
+    .step-line.done { background: var(--green); }
+    .step-label { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; margin-top: 6px; }
+    .step-wrap { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+    /* ── STEP PANEL ── */
+    .step-panel { display: none; animation: fadeUp .35s ease; }
+    .step-panel.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── CARD ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 20px; }
+    .card-head { margin-bottom: 20px; }
+    .card-head h2 { font-family: 'Merriweather', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+    .card-head p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ── CHECKBOX GRID ── */
+    .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .check-item { position: relative; }
+    .check-item input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+    .check-label { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; cursor: pointer; transition: all .2s; background: var(--bg); user-select: none; }
+    .check-label:hover { border-color: var(--blue-main); background: rgba(11,99,183,.04); }
+    .check-item input:checked + .check-label { border-color: var(--blue-main); background: rgba(11,99,183,.07); }
+    .check-icon { font-size: 22px; flex-shrink: 0; }
+    .check-info { flex: 1; min-width: 0; }
+    .check-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .check-count { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .check-tick { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; font-size: 11px; }
+    .check-item input:checked + .check-label .check-tick { background: var(--blue-main); border-color: var(--blue-main); color: white; }
+    .check-tick::after { content: '✓'; display: none; }
+    .check-item input:checked + .check-label .check-tick::after { display: block; }
+
+    /* Topic checkboxes — slightly smaller */
+    .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .topic-label { padding: 11px 14px; font-size: 13px; }
+    .topic-name { font-size: 13px; font-weight: 600; }
+
+    /* Subtopic checkboxes */
+    .subtopic-section { margin-bottom: 22px; }
+    .subtopic-section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px; color: var(--blue-main); margin-bottom: 10px; padding: 6px 0; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .subtopic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 4px; }
+    .subtopic-label { padding: 10px 13px; font-size: 12.5px; }
+    .subtopic-name { font-size: 12.5px; font-weight: 600; }
+
+    /* Progress pill on check items */
+    .prog-pill { display: inline-flex; align-items: center; gap: 4px; background: var(--green-bg); color: var(--green); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-top: 3px; }
+    .prog-pill.partial { background: var(--amber-bg); color: var(--amber); }
+    .prog-pill.none { background: var(--red-bg); color: var(--red); }
+
+    /* ── MCQ SLIDER STEP ── */
+    .mcq-row { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
+    .mcq-slider { flex: 1; -webkit-appearance: none; height: 6px; border-radius: 10px; background: var(--border); outline: none; cursor: pointer; }
+    .mcq-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--blue-main); cursor: pointer; box-shadow: 0 2px 8px rgba(11,99,183,.3); }
+    .mcq-value-box { background: var(--blue-main); color: white; font-size: 18px; font-weight: 800; padding: 8px 16px; border-radius: 10px; min-width: 64px; text-align: center; font-family: 'Merriweather', serif; }
+    .mcq-limits { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-weight: 600; }
+    .duration-pill { display: inline-flex; align-items: center; gap: 8px; background: var(--purple-bg); color: var(--purple); padding: 10px 18px; border-radius: 50px; font-weight: 700; font-size: 14px; margin-top: 14px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .summary-item { background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+    .summary-item .s-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-bottom: 4px; }
+    .summary-item .s-val { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.4; }
+    .summary-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+    .tag { background: rgba(11,99,183,.1); color: var(--blue-main); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+
+    /* ── FOOTER NAV ── */
+    .step-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 10px; }
+    .btn { padding: 11px 22px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; transition: all .2s; display: inline-flex; align-items: center; gap: 7px; }
+    .btn-primary { background: var(--blue-main); color: white; }
+    .btn-primary:hover { background: var(--blue-mid); transform: translateY(-1px); }
+    .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+    .btn-outline { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-outline:hover { border-color: var(--blue-main); color: var(--blue-main); }
+    .btn-success { background: var(--green); color: white; font-size: 15px; padding: 13px 28px; }
+    .btn-success:hover { background: #15803d; transform: translateY(-1px); }
+    .btn-success:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+
+    /* Loading spinner */
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert */
+    .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none; }
+    .alert.show { display: block; }
+    .alert-error { background: var(--red-bg); color: var(--red); border: 1px solid rgba(220,38,38,.25); }
+    .alert-success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(22,163,74,.25); }
+
+    /* Select-all row */
+    .select-all-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .select-all-btn { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+    .select-all-btn:hover { border-color: var(--blue-main); color: var(--blue-main); }
+    .selected-count { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 32px 20px; color: var(--muted); }
+    .empty-state .e-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-state p { font-size: 14px; }
+
+    /* Loading state */
+    .loading-state { text-align: center; padding: 32px 20px; color: var(--muted); }
+    .loading-state .load-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--blue-main); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 12px; }
+
+    @media (max-width: 640px) {
+      .hamburger { display: flex; }
+      .nav-links, .logout-btn-hdr { display: none; }
+      main { padding: 16px 16px 48px; }
+      .check-grid { grid-template-columns: 1fr 1fr; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .step-label { display: none; }
+      .card { padding: 18px; }
+      .topic-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 400px) {
+      .check-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="quiz-selection.html" class="brand">
+      <img src="logo.jpeg" class="brand-logo" alt="MedMinds" onerror="this.style.display='none'">
+      <span class="brand-name">MedMinds</span>
+    </a>
+    <nav class="nav-links">
+      <a href="quiz-selection.html">🏠 Dashboard</a>
+    <a href="create-test.html">🧪 Create Test</a>
+    <a href="custom-history.html">Quiz History</a>
+    <a href="stats.html">📊 My Stats</a>
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="my-batch.html">My Batch</a>
+    <a href="profile.html">👤 Profile</a>
+    </nav>
+    <div class="header-right">
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button class="logout-btn-hdr" onclick="logout()">Logout</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileNav()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobileNav">
+     <a href="quiz-selection.html">🏠 Dashboard</a>
+    <a href="create-test.html">🧪 Create Test</a>
+    <a href="custom-history.html">Quiz History</a>
+    <a href="stats.html">📊 My Stats</a>
+    <a href="leaderboard.html">🏆 Leaderboard</a>
+    <a href="my-batch.html">My Batch</a>
+    <a href="profile.html">👤 Profile</a>
+    <button class="mobile-nav-logout" onclick="logout()">🚪 Logout</button>
+  </nav>
+</header>
+
+<main id="mainContent">
+
+  <!-- Loading -->
+  <div id="pageLoader" class="loading-state">
+    <div class="load-spinner"></div>
+    <p>Checking access…</p>
+  </div>
+
+  <!-- Blocked (trial used) -->
+  <div id="blockedState" style="display:none">
+    <div class="blocked-card">
+      <div class="b-icon">🔒</div>
+      <h2>Trial Limit Reached</h2>
+      <p>You've used your free custom test (60 MCQs). Enroll in a batch to unlock unlimited custom practice tests and full access to all features.</p>
+      <a href="batches.html">View Batches & Enroll</a>
+    </div>
+  </div>
+
+  <!-- Trial banner (shown for trial users who haven't used it yet) -->
+  <div id="trialBanner" class="trial-banner" style="display:none">
+    <div class="tb-icon">⚠️</div>
+    <div class="tb-text">
+      <strong>Trial Access:</strong> You can create <strong>one free custom test (max 60 MCQs)</strong>. Enroll in a batch for unlimited practice.
+    </div>
+  </div>
+
+  <!-- ══ STEPPER ══ -->
+  <div class="stepper" id="stepper" style="display:none">
+    <div class="step-item">
+      <div class="step-wrap">
+        <div class="step-circle active" id="sc1">1</div>
+        <div class="step-label">Subjects</div>
+      </div>
+      <div class="step-line" id="sl1"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-wrap">
+        <div class="step-circle" id="sc2">2</div>
+        <div class="step-label">Topics</div>
+      </div>
+      <div class="step-line" id="sl2"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-wrap">
+        <div class="step-circle" id="sc3">3</div>
+        <div class="step-label">Subtopics</div>
+      </div>
+      <div class="step-line" id="sl3"></div>
+    </div>
+    <div class="step-item">
+      <div class="step-wrap">
+        <div class="step-circle" id="sc4">4</div>
+        <div class="step-label">MCQs</div>
+      </div>
+      <div class="step-line" id="sl4"></div>
+    </div>
+    <div class="step-item" style="flex:0">
+      <div class="step-wrap">
+        <div class="step-circle" id="sc5">5</div>
+        <div class="step-label">Confirm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert -->
+  <div class="alert alert-error" id="alertBox"></div>
+
+  <!-- ══ STEP 1: SUBJECTS ══ -->
+  <div class="step-panel active" id="panel1" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <h2>📚 Step 1: Select Subjects</h2>
+        <p>Choose one or more subjects you want to practice. MCQ counts update in real time.</p>
+      </div>
+      <div class="select-all-row">
+        <button class="select-all-btn" onclick="toggleSelectAllSubjects()">Select All</button>
+        <span class="selected-count" id="subjSelectedCount">0 selected</span>
+      </div>
+      <div class="check-grid" id="subjectsGrid">
+        <div class="loading-state"><div class="load-spinner"></div><p>Loading…</p></div>
+      </div>
+    </div>
+    <div class="step-footer">
+      <span></span>
+      <button class="btn btn-primary" onclick="goStep(2)" id="btnStep1">Next: Topics →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: TOPICS ══ -->
+  <div class="step-panel" id="panel2" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <h2>📖 Step 2: Select Topics</h2>
+        <p>Choose topics from your selected subjects. You can see how many MCQs are in each topic.</p>
+      </div>
+      <div class="select-all-row">
+        <button class="select-all-btn" onclick="toggleSelectAllTopics()">Select All</button>
+        <span class="selected-count" id="topicSelectedCount">0 selected</span>
+      </div>
+      <div id="topicsContainer">
+        <div class="loading-state"><div class="load-spinner"></div><p>Loading topics…</p></div>
+      </div>
+    </div>
+    <div class="step-footer">
+      <button class="btn btn-outline" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)" id="btnStep2">Next: Subtopics →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3: SUBTOPICS ══ -->
+  <div class="step-panel" id="panel3" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <h2>🔬 Step 3: Select Subtopics</h2>
+        <p>Pick specific subtopics. The badge shows solved ✅ vs unsolved ⬜ questions for you.</p>
+      </div>
+      <div class="select-all-row">
+        <button class="select-all-btn" onclick="toggleSelectAllSubtopics()">Select All</button>
+        <span class="selected-count" id="subtopicSelectedCount">0 selected</span>
+      </div>
+      <div id="subtopicsContainer">
+        <div class="loading-state"><div class="load-spinner"></div><p>Loading subtopics…</p></div>
+      </div>
+    </div>
+    <div class="step-footer">
+      <button class="btn btn-outline" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(4)" id="btnStep3">Next: MCQs →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4: MCQ COUNT ══ -->
+  <div class="step-panel" id="panel4" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <h2>🔢 Step 4: Number of MCQs</h2>
+        <p>Set how many questions you want in your test. Questions will be randomly shuffled every time.</p>
+      </div>
+      <div class="mcq-row">
+        <input type="range" class="mcq-slider" id="mcqSlider" min="5" max="100" value="30" oninput="updateMcqSlider()">
+        <div class="mcq-value-box" id="mcqValueBox">30</div>
+      </div>
+      <div class="mcq-limits">
+        <span>Min: 5</span>
+        <span id="mcqMaxLabel">Max: 100</span>
+      </div>
+      <div style="margin-top:16px; padding:14px 16px; background:var(--bg); border-radius:10px; border:1.5px solid var(--border);">
+        <div style="font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px;">Available in selection</div>
+        <div style="font-size:22px; font-weight:800; color:var(--blue-main);" id="availableCount">—</div>
+        <div style="font-size:12px; color:var(--muted); margin-top:2px;">questions across selected subtopics</div>
+      </div>
+      <div class="duration-pill" style="margin-top:16px;">
+        ⏱️ Estimated duration: <strong id="durationText">30 min</strong>
+      </div>
+    </div>
+    <div class="step-footer">
+      <button class="btn btn-outline" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(5)" id="btnStep4">Review & Create →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 5: CONFIRM ══ -->
+  <div class="step-panel" id="panel5" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <h2>✅ Step 5: Confirm Your Test</h2>
+        <p>Review your selection before starting. Once you click Create, a unique shuffled test is generated.</p>
+      </div>
+
+      <div class="summary-grid" id="summaryGrid">
+        <!-- populated by JS -->
+      </div>
+
+      <div style="margin-top:20px; padding:16px; background:linear-gradient(135deg,rgba(11,99,183,.06),rgba(11,99,183,.02)); border:1.5px solid rgba(11,99,183,.18); border-radius:12px;">
+        <div style="font-size:12px; font-weight:700; color:var(--blue-main); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px;">⚠️ Important</div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.6;">Questions are randomly selected and shuffled on every test. You can retake different questions from the same subtopics unlimited times.</div>
+      </div>
+    </div>
+    <div class="step-footer">
+      <button class="btn btn-outline" onclick="goStep(4)">← Back</button>
+      <button class="btn btn-success" onclick="createAndStart()" id="btnCreate">
+        🚀 Create Test
+      </button>
+    </div>
+  </div>
+
+</main>
+
+<script src="script.js"></script>
+<script>
+// ══════════════════════════════════════════════════
+// CONFIG
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Theme
+(function() {
+  const saved = localStorage.getItem('medminds-theme');
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.setAttribute('data-theme', saved || (dark ? 'dark' : 'light'));
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = (saved || (dark ? 'dark' : 'light')) === 'dark' ? '☀️' : '🌙';
+})();
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('medminds-theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+function toggleMobileNav() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobileNav').classList.toggle('open');
+}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let currentStep = 1;
+let currentUser = null;
+let userProfile = null;
+let isBatchUser = false;
+let isTrialUser = false;
+let trialUsed = false;
+
+// Data
+let allSubjects = [];         // [{id, name, icon, color}]
+let allTopics = [];           // [{id, name, subject_id, subject_name, q_count}]
+let allSubtopics = [];        // [{id, name, topic_id, topic_name, subject_name, q_count, solved_count}]
+
+// Selections
+let selectedSubjects = new Set();
+let selectedTopics = new Set();
+let selectedSubtopics = new Set();
+let mcqCount = 30;
+let maxAvailable = 0;
+let trialMax = 60;
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+  try {
+    const { data: authData } = await sb.auth.getUser();
+    currentUser = authData?.user;
+    if (!currentUser) { window.location.href = 'index.html'; return; }
+
+    // Load user profile
+    const { data: profile } = await sb.from('users').select('*').eq('id', currentUser.id).single();
+    userProfile = profile;
+
+    const adminEmails = ['admin@medminds.com', 'service.medminds@gmail.com'];
+    if (adminEmails.includes(currentUser.email)) {
+      // Admin: full access
+      isBatchUser = true;
+    } else if (profile?.batch_id) {
+      isBatchUser = true;
+    } else {
+      // Trial user — check if they already used their trial test
+      isTrialUser = true;
+      const { count } = await sb.from('custom_test_attempts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', currentUser.id);
+      trialUsed = (count || 0) > 0;
+    }
+
+    document.getElementById('pageLoader').style.display = 'none';
+
+    if (isTrialUser && trialUsed) {
+      document.getElementById('blockedState').style.display = 'block';
+      return;
+    }
+
+    if (isTrialUser) {
+      document.getElementById('trialBanner').style.display = 'flex';
+    }
+
+    // Show wizard
+    document.getElementById('stepper').style.display = 'flex';
+    document.getElementById('panel1').style.display = 'block';
+    document.getElementById('panel1').classList.add('active');
+
+    await loadSubjectsStep();
+  } catch (e) {
+    console.error('Init error:', e);
+    document.getElementById('pageLoader').innerHTML = '<p style="color:var(--red)">Error loading page. Please refresh.</p>';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// STEPPER NAVIGATION
+// ══════════════════════════════════════════════════
+async function goStep(n) {
+  // Validate current step before moving forward
+  if (n > currentStep) {
+    if (currentStep === 1 && selectedSubjects.size === 0) { showAlert('Please select at least one subject.'); return; }
+    if (currentStep === 2 && selectedTopics.size === 0) { showAlert('Please select at least one topic.'); return; }
+    if (currentStep === 3 && selectedSubtopics.size === 0) { showAlert('Please select at least one subtopic.'); return; }
+  }
+
+  // Load data for target step
+  if (n === 2) await loadTopicsStep();
+  if (n === 3) await loadSubtopicsStep();
+  if (n === 4) await loadMcqStep();
+  if (n === 5) buildSummary();
+
+  // Update panel visibility
+  document.getElementById(`panel${currentStep}`).classList.remove('active');
+  document.getElementById(`panel${currentStep}`).style.display = 'none';
+
+  currentStep = n;
+
+  document.getElementById(`panel${currentStep}`).style.display = 'block';
+  document.getElementById(`panel${currentStep}`).classList.add('active');
+
+  updateStepper();
+  clearAlert();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepper() {
+  for (let i = 1; i <= 5; i++) {
+    const circle = document.getElementById(`sc${i}`);
+    circle.classList.remove('active', 'done');
+    if (i < currentStep) { circle.classList.add('done'); circle.innerHTML = '✓'; }
+    else if (i === currentStep) { circle.classList.add('active'); circle.innerHTML = i; }
+    else { circle.innerHTML = i; }
+    if (i < 5) {
+      const line = document.getElementById(`sl${i}`);
+      line.classList.toggle('done', i < currentStep);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════
+// STEP 1 — SUBJECTS
+// ══════════════════════════════════════════════════
+async function loadSubjectsStep() {
+  const grid = document.getElementById('subjectsGrid');
+  grid.innerHTML = '<div class="loading-state"><div class="load-spinner"></div><p>Loading subjects…</p></div>';
+
+  try {
+    // Load subjects
+    const { data: subjects } = await sb.from('subjects').select('*').order('name');
+    // Load question counts per subject
+    const { data: qBySubj } = await sb.from('questions').select('subject').not('subject','is',null);
+
+    const countMap = {};
+    (qBySubj || []).forEach(q => { countMap[q.subject] = (countMap[q.subject] || 0) + 1; });
+
+    allSubjects = (subjects || []).map(s => ({ ...s, q_count: countMap[s.name] || 0 }));
+
+    if (!allSubjects.length) {
+      grid.innerHTML = '<div class="empty-state"><div class="e-icon">📚</div><p>No subjects found. Ask your admin to add subjects.</p></div>';
+      return;
+    }
+
+    grid.innerHTML = '';
+    allSubjects.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'check-item';
+      div.innerHTML = `
+        <input type="checkbox" id="subj_${s.id}" value="${s.id}" onchange="onSubjectToggle('${s.id}')">
+        <label class="check-label" for="subj_${s.id}">
+          <span class="check-icon">${s.icon || '📚'}</span>
+          <div class="check-info">
+            <div class="check-name">${s.name}</div>
+            <div class="check-count">${s.q_count.toLocaleString()} MCQs</div>
+          </div>
+          <div class="check-tick"></div>
+        </label>`;
+      grid.appendChild(div);
+    });
+  } catch (e) {
+    grid.innerHTML = `<div class="empty-state"><div class="e-icon">❌</div><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+function onSubjectToggle(id) {
+  const numId = Number(id);
+  if (document.getElementById(`subj_${id}`).checked) selectedSubjects.add(numId);
+  else selectedSubjects.delete(numId);
+  document.getElementById('subjSelectedCount').textContent = `${selectedSubjects.size} selected`;
+  // Clear downstream if subjects change
+  selectedTopics.clear(); selectedSubtopics.clear();
+}
+
+function toggleSelectAllSubjects() {
+  const all = document.querySelectorAll('#subjectsGrid input[type="checkbox"]');
+  const anyUnchecked = [...all].some(cb => !cb.checked);
+  all.forEach(cb => { cb.checked = anyUnchecked; onSubjectToggle(cb.value); });
+}
+
+// ══════════════════════════════════════════════════
+// STEP 2 — TOPICS
+// ══════════════════════════════════════════════════
+async function loadTopicsStep() {
+  const container = document.getElementById('topicsContainer');
+  container.innerHTML = '<div class="loading-state"><div class="load-spinner"></div><p>Loading topics…</p></div>';
+  selectedTopics.clear();
+  document.getElementById('topicSelectedCount').textContent = '0 selected';
+
+  try {
+    const selSubjIds = [...selectedSubjects];
+    const selSubjNames = allSubjects.filter(s => selSubjIds.includes(s.id)).map(s => s.name);
+
+    // Load topics for selected subjects
+    const { data: topics } = await sb.from('topics')
+      .select('*')
+      .in('subject_name', selSubjNames)
+      .order('name');
+
+    // Count questions per topic
+    const { data: qByTopic } = await sb.from('questions')
+      .select('topic')
+      .in('subject', selSubjNames)
+      .not('topic','is',null);
+
+    const countMap = {};
+    (qByTopic || []).forEach(q => { countMap[q.topic] = (countMap[q.topic] || 0) + 1; });
+
+    allTopics = (topics || []).map(t => ({ ...t, q_count: countMap[t.name] || 0 }));
+
+    if (!allTopics.length) {
+      container.innerHTML = '<div class="empty-state"><div class="e-icon">📖</div><p>No topics found for selected subjects. Questions may not have topics assigned yet.</p></div>';
+      return;
+    }
+
+    // Group by subject
+    const grouped = {};
+    allTopics.forEach(t => {
+      if (!grouped[t.subject_name]) grouped[t.subject_name] = [];
+      grouped[t.subject_name].push(t);
+    });
+
+    container.innerHTML = '';
+    Object.entries(grouped).forEach(([subj, topics]) => {
+      const subjObj = allSubjects.find(s => s.name === subj);
+      const section = document.createElement('div');
+      section.className = 'subtopic-section';
+      section.innerHTML = `<div class="subtopic-section-title">${subjObj?.icon || '📚'} ${subj}</div><div class="topic-grid" id="topic_grid_${subj.replace(/\s/g,'_')}"></div>`;
+      container.appendChild(section);
+
+      const tGrid = section.querySelector(`#topic_grid_${subj.replace(/\s/g,'_')}`);
+      topics.forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'check-item';
+        div.innerHTML = `
+          <input type="checkbox" id="topic_${t.id}" value="${t.id}" onchange="onTopicToggle('${t.id}')">
+          <label class="check-label topic-label" for="topic_${t.id}">
+            <div class="check-info" style="flex:1">
+              <div class="check-name topic-name">${t.name}</div>
+              <div class="check-count">${t.q_count} MCQs</div>
+            </div>
+            <div class="check-tick"></div>
+          </label>`;
+        tGrid.appendChild(div);
+      });
+    });
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state"><div class="e-icon">❌</div><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+function onTopicToggle(id) {
+  const numId = Number(id);
+  if (document.getElementById(`topic_${id}`).checked) selectedTopics.add(numId);
+  else selectedTopics.delete(numId);
+  document.getElementById('topicSelectedCount').textContent = `${selectedTopics.size} selected`;
+  selectedSubtopics.clear();
+}
+
+function toggleSelectAllTopics() {
+  const all = document.querySelectorAll('#topicsContainer input[type="checkbox"]');
+  const anyUnchecked = [...all].some(cb => !cb.checked);
+  all.forEach(cb => { cb.checked = anyUnchecked; onTopicToggle(cb.value); });
+}
+
+// ══════════════════════════════════════════════════
+// STEP 3 — SUBTOPICS
+// ══════════════════════════════════════════════════
+async function loadSubtopicsStep() {
+  const container = document.getElementById('subtopicsContainer');
+  container.innerHTML = '<div class="loading-state"><div class="load-spinner"></div><p>Loading subtopics…</p></div>';
+  selectedSubtopics.clear();
+  document.getElementById('subtopicSelectedCount').textContent = '0 selected';
+
+  try {
+    const selTopicIds = [...selectedTopics];
+    const selTopicNames = allTopics.filter(t => selTopicIds.includes(t.id)).map(t => t.name);
+
+    // Load subtopics
+    const { data: subtopics } = await sb.from('subtopics')
+      .select('*')
+      .in('topic_name', selTopicNames)
+      .order('name');
+
+    // Count questions per subtopic
+    const { data: qBySub } = await sb.from('questions')
+      .select('subtopic')
+      .in('topic', selTopicNames)
+      .not('subtopic','is',null);
+
+    const countMap = {};
+    (qBySub || []).forEach(q => { countMap[q.subtopic] = (countMap[q.subtopic] || 0) + 1; });
+
+    // Load what this user has already attempted via custom tests
+    let solvedMap = {};
+    try {
+      const { data: myAttempts } = await sb.from('custom_test_attempts')
+        .select('answers, questions_json')
+        .eq('user_id', currentUser.id);
+
+      (myAttempts || []).forEach(attempt => {
+        const answers = attempt.answers || {};
+        const questions = attempt.questions_json || [];
+        Object.keys(answers).forEach(idx => {
+          const q = questions[parseInt(idx)];
+          if (q?.subtopic) solvedMap[q.subtopic] = (solvedMap[q.subtopic] || 0) + 1;
+        });
+      });
+    } catch (_) {}
+
+    allSubtopics = (subtopics || []).map(st => ({
+      ...st,
+      q_count: countMap[st.name] || 0,
+      solved_count: solvedMap[st.name] || 0,
+    }));
+
+    if (!allSubtopics.length) {
+      container.innerHTML = '<div class="empty-state"><div class="e-icon">🔬</div><p>No subtopics found. They may not be assigned to questions yet.</p></div>';
+      return;
+    }
+
+    // Group by topic then subject
+    const grouped = {};
+    allSubtopics.forEach(st => {
+      const key = st.subject_name + '|||' + st.topic_name;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(st);
+    });
+
+    container.innerHTML = '';
+    Object.entries(grouped).forEach(([key, subs]) => {
+      const [subj, topic] = key.split('|||');
+      const section = document.createElement('div');
+      section.className = 'subtopic-section';
+
+      const topicObj = allTopics.find(t => t.name === topic);
+      section.innerHTML = `
+        <div class="subtopic-section-title">
+          ${allSubjects.find(s=>s.name===subj)?.icon||'📚'} ${subj} → ${topic}
+        </div>
+        <div class="subtopic-grid" id="subgrid_${topicObj?.id}"></div>`;
+      container.appendChild(section);
+
+      const sGrid = section.querySelector(`#subgrid_${topicObj?.id}`);
+      subs.forEach(st => {
+        const pct = st.q_count > 0 ? Math.round((st.solved_count / st.q_count) * 100) : 0;
+        const pillClass = pct === 0 ? 'none' : pct < 100 ? 'partial' : '';
+        const pillText = pct === 100 ? `✅ ${st.solved_count}/${st.q_count}` :
+                         pct > 0 ? `⬜ ${st.solved_count}/${st.q_count}` : `⬜ 0/${st.q_count}`;
+
+        const div = document.createElement('div');
+        div.className = 'check-item';
+        div.innerHTML = `
+          <input type="checkbox" id="sub_${st.id}" value="${st.id}" onchange="onSubtopicToggle('${st.id}')">
+          <label class="check-label subtopic-label" for="sub_${st.id}">
+            <div class="check-info" style="flex:1">
+              <div class="check-name subtopic-name">${st.name}</div>
+              <div class="check-count">${st.q_count} MCQs</div>
+              <div><span class="prog-pill ${pillClass}">${pillText}</span></div>
+            </div>
+            <div class="check-tick"></div>
+          </label>`;
+        sGrid.appendChild(div);
+      });
+    });
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state"><div class="e-icon">❌</div><p>Error: ${e.message}</p></div>`;
+  }
+}
+
+function onSubtopicToggle(id) {
+  const numId = Number(id);
+  if (document.getElementById(`sub_${id}`).checked) selectedSubtopics.add(numId);
+  else selectedSubtopics.delete(numId);
+  document.getElementById('subtopicSelectedCount').textContent = `${selectedSubtopics.size} selected`;
+}
+
+function toggleSelectAllSubtopics() {
+  const all = document.querySelectorAll('#subtopicsContainer input[type="checkbox"]');
+  const anyUnchecked = [...all].some(cb => !cb.checked);
+  all.forEach(cb => { cb.checked = anyUnchecked; onSubtopicToggle(cb.value); });
+}
+
+// ══════════════════════════════════════════════════
+// STEP 4 — MCQ COUNT
+// ══════════════════════════════════════════════════
+async function loadMcqStep() {
+  // Count available questions across selected subtopics
+  const selSubIds = [...selectedSubtopics];
+  const selSubNames = allSubtopics.filter(st => selSubIds.includes(Number(st.id))).map(st => st.name);
+
+  try {
+    const { count } = await sb.from('questions')
+      .select('id', { count: 'exact', head: true })
+      .in('subtopic', selSubNames);
+    maxAvailable = count || 0;
+  } catch (_) {
+    maxAvailable = allSubtopics.filter(st => selSubIds.includes(st.id)).reduce((s, st) => s + st.q_count, 0);
+  }
+
+  document.getElementById('availableCount').textContent = maxAvailable.toLocaleString();
+
+  // Determine max slider limit
+  let sliderMax = isTrialUser ? Math.min(maxAvailable, trialMax) : Math.min(maxAvailable, 200);
+  if (sliderMax < 5) sliderMax = 5;
+
+  const slider = document.getElementById('mcqSlider');
+  slider.max = sliderMax;
+  slider.value = Math.min(30, sliderMax);
+  document.getElementById('mcqMaxLabel').textContent = `Max: ${sliderMax}`;
+  document.getElementById('mcqValueBox').textContent = slider.value;
+  mcqCount = parseInt(slider.value);
+  updateDuration();
+}
+
+function updateMcqSlider() {
+  mcqCount = parseInt(document.getElementById('mcqSlider').value);
+  document.getElementById('mcqValueBox').textContent = mcqCount;
+  updateDuration();
+}
+
+function updateDuration() {
+  const mins = mcqCount; // 1 min per MCQ
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  document.getElementById('durationText').textContent = h > 0 ? `${h}h ${m}min` : `${m} min`;
+}
+
+// ══════════════════════════════════════════════════
+// STEP 5 — SUMMARY
+// ══════════════════════════════════════════════════
+function buildSummary() {
+  const selSubjNames = allSubjects.filter(s => selectedSubjects.has(s.id)).map(s => s.name);
+  const selTopicNames = allTopics.filter(t => selectedTopics.has(t.id)).map(t => t.name);
+  const selSubtopicNames = allSubtopics.filter(st => selectedSubtopics.has(st.id)).map(st => st.name);
+
+  const mins = mcqCount;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  const durText = h > 0 ? `${h}h ${m}min` : `${m} min`;
+
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="summary-item">
+      <div class="s-label">📚 Subjects</div>
+      <div class="s-val">${selSubjNames.length}</div>
+      <div class="summary-tags">${selSubjNames.map(n=>`<span class="tag">${n}</span>`).join('')}</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">📖 Topics</div>
+      <div class="s-val">${selTopicNames.length}</div>
+      <div class="summary-tags">${selTopicNames.slice(0,6).map(n=>`<span class="tag">${n}</span>`).join('')}${selTopicNames.length>6?`<span class="tag">+${selTopicNames.length-6} more</span>`:''}</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">🔬 Subtopics</div>
+      <div class="s-val">${selSubtopicNames.length}</div>
+      <div class="summary-tags">${selSubtopicNames.slice(0,4).map(n=>`<span class="tag">${n}</span>`).join('')}${selSubtopicNames.length>4?`<span class="tag">+${selSubtopicNames.length-4} more</span>`:''}</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">🔢 MCQs</div>
+      <div class="s-val">${mcqCount} questions</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">⏱️ Duration</div>
+      <div class="s-val">${durText}</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-label">🎲 Mode</div>
+      <div class="s-val">Random & Shuffled</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// CREATE TEST
+// ══════════════════════════════════════════════════
+async function createAndStart() {
+  const btn = document.getElementById('btnCreate');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+
+  try {
+    const selSubNames = allSubtopics.filter(st => selectedSubtopics.has(st.id)).map(st => st.name);
+
+    // Fetch ALL questions matching subtopics
+    const { data: pool, error } = await sb.from('questions')
+      .select('*')
+      .in('subtopic', selSubNames);
+
+    if (error) throw error;
+    if (!pool || pool.length === 0) throw new Error('No questions found for selected subtopics.');
+
+    // Shuffle using Fisher-Yates
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Take only mcqCount
+    const selected = shuffled.slice(0, mcqCount);
+
+    // Build meta
+    const selSubjNames = allSubjects.filter(s => selectedSubjects.has(s.id)).map(s => s.name);
+    const selTopicNames = allTopics.filter(t => selectedTopics.has(t.id)).map(t => t.name);
+    const mins = mcqCount;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    const durText = h > 0 ? `${h}h ${m}min` : `${m} min`;
+
+    const meta = {
+      subjects: selSubjNames,
+      topics: selTopicNames,
+      subtopics: selSubNames,
+      mcq_count: mcqCount,
+      duration_seconds: mcqCount * 60,
+      duration_text: durText,
+      is_custom: true,
+      created_at: new Date().toISOString(),
+    };
+
+    // Save attempt record (with pending status — completed when user submits)
+    const { data: attemptRow, error: aErr } = await sb.from('custom_test_attempts').insert({
+      user_id: currentUser.id,
+      questions_json: selected,
+      answers: null,
+      score: null,
+      total: mcqCount,
+      subjects: selSubjNames,
+      topics: selTopicNames,
+      subtopics: selSubNames,
+      duration_seconds: meta.duration_seconds,
+      status: 'pending',
+    }).select().single();
+
+    if (aErr) throw aErr;
+
+    // Store in localStorage for quiz.html to pick up
+    localStorage.setItem('customTestMeta', JSON.stringify(meta));
+    localStorage.setItem('customTestAttemptId', attemptRow.id);
+    localStorage.setItem('questions', JSON.stringify(selected));
+    localStorage.setItem('isCustomTest', '1');
+    localStorage.removeItem('selectedQuizId');
+
+    // Go to quiz details page
+    window.location.href = `quiz-details.html?custom=1&attempt_id=${attemptRow.id}`;
+
+  } catch (e) {
+    console.error('createAndStart error:', e);
+    showAlert('Error creating test: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '🚀 Create Test';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════
+function showAlert(msg) {
+  const el = document.getElementById('alertBox');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function clearAlert() {
+  document.getElementById('alertBox').classList.remove('show');
+}
+
+async function logout() {
+  try { await removeCurrentSession(); } catch (_) {}
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

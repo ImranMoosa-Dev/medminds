@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Details - MedMinds</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --blue: #0b63b7;
+            --blue-dark: #0a4a8f;
+            --green: #2e7d32;
+            --red: #c62828;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #404040;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        header {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+            color: white;
+            padding: 24px 28px;
+            border-radius: 14px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 20px rgba(11,99,183,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        header h1 { font-size: 26px; margin-bottom: 4px; }
+        header p  { opacity: 0.9; font-size: 13px; }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+        /* Card */
+        .card {
+            background: var(--bg-primary);
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .quiz-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--blue);
+            margin-bottom: 6px;
+        }
+
+        .quiz-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        /* Tag badges */
+        .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .tag-blue   { background: #e3f2fd; color: #0b63b7; }
+        .tag-purple { background: #f3e5f5; color: #7b1fa2; }
+        .tag-green  { background: #e8f5e9; color: #2e7d32; }
+        .tag-orange { background: #fff3e0; color: #e65100; }
+        .tag-red    { background: #ffebee; color: #c62828; }
+
+        /* Details grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .detail-item {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            border-left: 4px solid var(--blue);
+        }
+
+        .detail-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+        }
+
+        .detail-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .detail-value.sm { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+
+        /* Description / Batch info box */
+        .info-box {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            border-left: 4px solid;
+        }
+
+        .info-box.blue   { background: #e3f2fd; border-color: #0b63b7; }
+        .info-box.green  { background: #e8f5e9; border-color: #2e7d32; }
+        .info-box.orange { background: #fff3e0; border-color: #e65100; }
+        .info-box.red    { background: #ffebee; border-color: #c62828; }
+
+        .info-box strong { font-size: 13px; font-weight: 700; }
+        .info-box p      { margin-top: 6px; font-size: 13px; color: var(--text-secondary); }
+
+        /* CTA */
+        .cta-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .btn-start {
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #0b63b7, #0a4a8f);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(11,99,183,0.3);
+        }
+
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(11,99,183,0.4); }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-back-2 {
+            padding: 14px 28px;
+            background: var(--bg-secondary);
+            color: var(--blue);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .btn-back-2:hover { border-color: var(--blue); }
+
+        /* Loading */
+        .loading { text-align: center; padding: 60px; color: var(--text-secondary); }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 44px; height: 44px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        .error-box {
+            background: #ffebee;
+            border-left: 4px solid #c62828;
+            padding: 20px;
+            border-radius: 10px;
+            color: #c62828;
+            text-align: center;
+        }
+
+        .error-box .icon { font-size: 36px; margin-bottom: 12px; }
+        .error-box h3 { margin-bottom: 8px; }
+
+        @media (max-width: 600px) {
+            header { padding: 18px; }
+            header h1 { font-size: 20px; }
+            .card { padding: 20px; }
+            .details-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>📚 Quiz Details</h1>
+                <p>Review the quiz information before you start</p>
+            </div>
+            <a href="quiz-selection.html" class="back-btn">← Back to Quizzes</a>
+        </header>
+        <main id="mainContent">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading quiz details...</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://dvxqkouoyqouwwuvfdui.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR2eHFrb3VveXFvdXd3dXZmZHVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MTg0MjQsImV4cCI6MjA4NzA5NDQyNH0.Jek6GiTqWYeDYq1brO8MEuNODexPhXKJcYr3PT7CacQ";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Init theme
+        (function() {
+            const saved = localStorage.getItem('medminds-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+
+        async function loadQuizDetailsPage() {
+            try {
+                // ── Auth check ──
+                const { data: authData } = await supabaseClient.auth.getUser();
+                const currentUser = authData?.user;
+
+                if (!currentUser) {
+                    showError('You must be logged in to view this page.', true);
+                    return;
+                }
+
+                // ── Custom test mode ──
+                const urlParams = new URLSearchParams(window.location.search);
+                const isCustom = urlParams.get('custom') === '1';
+                const attemptId = urlParams.get('attempt_id');
+
+                if (isCustom && attemptId) {
+                    await loadCustomTestDetails(attemptId, currentUser);
+                    return;
+                }
+
+                // ── Quiz ID from URL ──
+                const quizId = urlParams.get('quiz_id');
+
+                if (!quizId) {
+                    showError('No quiz ID found in the URL.');
+                    return;
+                }
+
+                // ── Fetch quiz ──
+                const { data: quiz, error: quizError } = await supabaseClient
+                    .from('quizzes')
+                    .select('*')
+                    .eq('id', quizId)
+                    .single();
+
+                if (quizError || !quiz) {
+                    showError('Quiz not found. It may have been deleted or moved.');
+                    return;
+                }
+
+                // ── Batch restriction check ──
+                // If quiz has a batch_id, the student must belong to that batch
+                if (quiz.batch_id) {
+                    const { data: studentProfile } = await supabaseClient
+                        .from('users')
+                        .select('batch_id, first_name')
+                        .eq('id', currentUser.id)
+                        .single();
+
+                    if (studentProfile && studentProfile.batch_id !== quiz.batch_id) {
+                        // Fetch the assigned batch name for a clear message
+                        const { data: assignedBatch } = await supabaseClient
+                            .from('batches')
+                            .select('name')
+                            .eq('id', quiz.batch_id)
+                            .single();
+
+                        showBatchRestricted(quiz.name, assignedBatch?.name || 'another batch');
+                        return;
+                    }
+                }
+
+                // ── Question count ──
+                const { count: questionCount } = await supabaseClient
+                    .from('questions')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('quiz_id', quizId);
+
+                // ── Batch info ──
+                let batchHTML = '';
+                if (quiz.batch_id) {
+                    const { data: batch } = await supabaseClient
+                        .from('batches')
+                        .select('name, description')
+                        .eq('id', quiz.batch_id)
+                        .single();
+
+                    if (batch) {
+                        batchHTML = `
+                            <div class="info-box green">
+                                <strong>📦 Assigned Batch: ${batch.name}</strong>
+                                ${batch.description ? `<p>${batch.description}</p>` : ''}
+                            </div>`;
+                    }
+                }
+
+                // ── Already attempted? ──
+                const { data: existingAttempt } = await supabaseClient
+                    .from('quiz_attempts')
+                    .select('id, score, total, created_at')
+                    .eq('quiz_id', quizId)
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+
+                // ── Render ──
+                const publishedDate = quiz.scheduled_date
+                    ? new Date(quiz.scheduled_date).toLocaleDateString('en-US', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    })
+                    : 'Not scheduled';
+
+                const estimatedMins = questionCount ? Math.ceil((questionCount / 40) * 60) : '--';
+
+                const statusTag = quiz.is_published
+                    ? '<span class="tag tag-green">✅ Published</span>'
+                    : '<span class="tag tag-orange">⏳ Draft</span>';
+
+                const typeTag = quiz.type
+                    ? `<span class="tag tag-blue">📋 ${quiz.type}</span>`
+                    : '';
+
+                const syllabusTag = quiz.syllabus
+                    ? `<span class="tag tag-purple">📚 ${quiz.syllabus}</span>`
+                    : '';
+
+                const batchTag = quiz.batch_id
+                    ? '<span class="tag tag-orange">🔒 Batch Restricted</span>'
+                    : '<span class="tag tag-green">🌐 Open to All</span>';
+
+                // CTA logic
+                let ctaHTML = '';
+                if (!quiz.is_published) {
+                    ctaHTML = `<button class="btn-start" disabled>⏳ Not Yet Published</button>`;
+                } else if (existingAttempt) {
+                    const pct = Math.round((existingAttempt.score / existingAttempt.total) * 100);
+                    const attemptDate = new Date(existingAttempt.created_at).toLocaleDateString();
+                    ctaHTML = `
+                        <div class="info-box orange" style="text-align:center; width:100%; margin-bottom:0;">
+                            <strong>✅ Already Attempted</strong>
+                            <p>You scored <strong>${existingAttempt.score}/${existingAttempt.total} (${pct}%)</strong> on ${attemptDate}.<br>Each quiz can only be attempted once.</p>
+                        </div>`;
+                } else {
+                    ctaHTML = `<button class="btn-start" onclick="startQuiz('${quiz.id}')">🚀 Start Quiz</button>`;
+                }
+
+                const html = `
+                    <div class="card">
+                        <div class="quiz-title">${quiz.name}</div>
+                        <div class="quiz-subtitle">Quiz #${quiz.quiz_order} · ${publishedDate}</div>
+
+                        <div class="tag-row">
+                            ${statusTag}
+                            ${typeTag}
+                            ${syllabusTag}
+                            ${batchTag}
+                        </div>
+
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">❓ Questions</div>
+                                <div class="detail-value" style="color:#2e7d32;">${questionCount || 0}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">⏱️ Est. Duration</div>
+                                <div class="detail-value">${estimatedMins}<span style="font-size:13px;font-weight:500;color:var(--text-secondary);"> min</span></div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">📋 Type</div>
+                                <div class="detail-value sm">${quiz.type || '—'}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">📚 Syllabus</div>
+                                <div class="detail-value sm">${quiz.syllabus || '—'}</div>
+                            </div>
+                        </div>
+
+                        ${quiz.description ? `
+                        <div class="info-box blue">
+                            <strong>📖 Description</strong>
+                            <p>${quiz.description}</p>
+                        </div>` : ''}
+
+                        ${batchHTML}
+
+                        <div class="cta-row">
+                            ${ctaHTML}
+                            <button class="btn-back-2" onclick="window.location.href='quiz-selection.html'">← Back to Quizzes</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('mainContent').innerHTML = html;
+
+            } catch (err) {
+                console.error('loadQuizDetailsPage error:', err);
+                showError('Something went wrong: ' + err.message);
+            }
+        }
+
+        function showError(message, showLogin = false) {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="error-box">
+                    <div class="icon">⚠️</div>
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                    ${showLogin ? '<br><a href="index.html" style="color:#c62828;font-weight:700;">→ Go to Login</a>' : ''}
+                    <br><br>
+                    <button onclick="window.location.href='quiz-selection.html'" style="padding:10px 22px;background:#c62828;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">← Back to Quizzes</button>
+                </div>`;
+        }
+
+        function showBatchRestricted(quizName, batchName) {
+            document.getElementById('mainContent').innerHTML = `
+                <div class="card" style="text-align:center; padding: 48px 30px;">
+                    <div style="font-size:52px;margin-bottom:16px;">🔒</div>
+                    <h2 style="color:#c62828;margin-bottom:12px;">Access Restricted</h2>
+                    <p style="font-size:15px;color:var(--text-secondary);margin-bottom:8px;">
+                        <strong style="color:var(--text-primary);">${quizName}</strong> is only available to students enrolled in:
+                    </p>
+                    <div style="display:inline-block;background:#ffebee;color:#c62828;padding:8px 20px;border-radius:20px;font-weight:700;font-size:14px;margin:12px 0 24px;">
+                        📦 ${batchName}
+                    </div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:28px;">
+                        You are not enrolled in this batch. Please contact your admin if you believe this is a mistake.
+                    </p>
+                    <button onclick="window.location.href='quiz-selection.html'" style="padding:12px 28px;background:linear-gradient(135deg,#0b63b7,#0a4a8f);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;">
+                        ← View Available Quizzes
+                    </button>
+                </div>`;
+        }
+
+        function startQuiz(quizId) {
+            localStorage.setItem('selectedQuizId', quizId);
+            window.location.href = 'quiz.html';
+        }
+
+        async function loadCustomTestDetails(attemptId, currentUser) {
+            try {
+                const { data: attempt, error } = await supabaseClient
+                    .from('custom_test_attempts')
+                    .select('*')
+                    .eq('id', attemptId)
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (error || !attempt) {
+                    showError('Custom test not found or access denied.');
+                    return;
+                }
+
+                const mcqCount = attempt.total || attempt.questions_json?.length || 0;
+                const durSecs = attempt.duration_seconds || mcqCount * 60;
+                const durH = Math.floor(durSecs / 3600);
+                const durM = Math.floor((durSecs % 3600) / 60);
+                const durText = durH > 0 ? `${durH}h ${durM}min` : `${durM} min`;
+
+                const subjects = (attempt.subjects || []).join(', ') || '—';
+                const topics = (attempt.topics || []);
+                const subtopics = (attempt.subtopics || []);
+
+                const topicTags = topics.slice(0,8).map(t=>`<span class="tag tag-blue">${t}</span>`).join('') + (topics.length>8?`<span class="tag tag-purple">+${topics.length-8} more</span>`:'');
+                const subtopicTags = subtopics.slice(0,6).map(s=>`<span class="tag tag-green">${s}</span>`).join('') + (subtopics.length>6?`<span class="tag tag-purple">+${subtopics.length-6} more</span>`:'');
+
+                const html = `
+                    <div class="card">
+                        <div class="tag-row">
+                            <span class="tag tag-purple">🧪 Custom Practice Test</span>
+                            <span class="tag tag-blue">🎲 Random &amp; Shuffled</span>
+                        </div>
+
+                        <div class="quiz-title">Custom Test — ${subjects}</div>
+                        <div class="quiz-subtitle">Generated on ${new Date(attempt.created_at).toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">❓ Questions</div>
+                                <div class="detail-value" style="color:#2e7d32;">${mcqCount}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">⏱️ Duration</div>
+                                <div class="detail-value">${durText}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">📚 Subjects</div>
+                                <div class="detail-value sm">${subjects}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">📖 Topics</div>
+                                <div class="detail-value sm">${topics.length} selected</div>
+                            </div>
+                        </div>
+
+                        ${topics.length ? `<div class="info-box blue"><strong>📖 Topics</strong><div class="tag-row" style="margin-top:10px;margin-bottom:0">${topicTags}</div></div>` : ''}
+                        ${subtopics.length ? `<div class="info-box green"><strong>🔬 Subtopics</strong><div class="tag-row" style="margin-top:10px;margin-bottom:0">${subtopicTags}</div></div>` : ''}
+
+                        <div class="info-box blue" style="margin-top:12px;">
+                            <strong>📌 How it works</strong>
+                            <p>Questions are randomly selected &amp; shuffled from your chosen subtopics. Every attempt gives you a fresh set of questions. The timer auto-submits when time runs out.</p>
+                        </div>
+
+                        <div class="cta-row">
+                            <button class="btn-start" onclick="startCustomTest('${attemptId}')">🚀 Start Test</button>
+                            <button class="btn-back-2" onclick="window.location.href='create-test.html'">← Create Another</button>
+                        </div>
+                    </div>`;
+
+                document.getElementById('mainContent').innerHTML = html;
+
+            } catch(e) {
+                console.error('loadCustomTestDetails:', e);
+                showError('Error loading custom test: ' + e.message);
+            }
+        }
+
+        function startCustomTest(attemptId) {
+            localStorage.setItem('isCustomTest', '1');
+            localStorage.setItem('customTestAttemptId', attemptId);
+            localStorage.removeItem('selectedQuizId');
+            window.location.href = 'quiz.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadQuizDetailsPage);
+    </script>
+</body>
+</html>
