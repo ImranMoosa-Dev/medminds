@@ -1,11 +1,27 @@
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const session = require("express-session");
 const multer = require("multer");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const app = express();
 const upload = multer({ dest: "uploads/" });
+
+// ================================
+// ENVIRONMENT VARIABLES
+// ================================
+const PORT = process.env.PORT || 5502;
+const NODE_ENV = process.env.NODE_ENV || "development";
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY;
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
+  .split(",")
+  .map((e) => e.trim());
+const JWT_SECRET = process.env.JWT_SECRET || "medminds-jwt-secret";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_COOKIE_NAME = process.env.JWT_COOKIE_NAME || "medminds_token";
 
 app.use(
   cors({
@@ -25,7 +41,61 @@ app.use(
   }),
 );
 const dbPromise = require("./MedMindsDB");
-const port = 5502;
+
+function parseCookies(req) {
+  const header = req.headers.cookie || "";
+  return header.split(";").reduce((cookies, pair) => {
+    const [name, ...rest] = pair.trim().split("=");
+    if (!name) return cookies;
+    cookies[name] = decodeURIComponent(rest.join("="));
+    return cookies;
+  }, {});
+}
+
+function attachUser(req, res, next) {
+  req.user = null;
+  const authHeader = req.headers.authorization;
+  let token = authHeader?.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : null;
+
+  if (!token) {
+    const cookies = parseCookies(req);
+    token = cookies[JWT_COOKIE_NAME];
+  }
+
+  if (token) {
+    try {
+      req.user = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      req.user = null;
+    }
+  }
+
+  if (!req.user && req.session?.user) {
+    req.user = { email: req.session.user };
+  }
+
+  next();
+}
+
+app.use(attachUser);
+
+// ================================
+// CONFIG ENDPOINT (for frontend)
+// ================================
+app.get("/api/config", (req, res) => {
+  res.json({
+    adminEmails: ADMIN_EMAILS,
+  });
+});
+
+app.get("/api/user-status", (req, res) => {
+  if (req.user) {
+    return res.json({ user: req.user });
+  }
+  res.json({ user: null });
+});
 
 (async () => {
   const db = await dbPromise;
@@ -299,6 +369,25 @@ const port = 5502;
 
       req.session.user = user.email;
 
+      const tokenPayload = {
+        email: user.email,
+        role:
+          user.email === "biologia.info1@gmail.com" ||
+          user.email === "admin@medminds.com"
+            ? "admin"
+            : "student",
+      };
+      const token = jwt.sign(tokenPayload, JWT_SECRET, {
+        expiresIn: JWT_EXPIRES_IN,
+      });
+
+      res.cookie(JWT_COOKIE_NAME, token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: NODE_ENV === "production",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
       // Record login date for streak calculation
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
       try {
@@ -340,9 +429,11 @@ const port = 5502;
         email,
       ]);
       if (rows.length === 0) {
-        return res.send(
-          "If an account with that email exists, a reset link has been sent.",
-        );
+        return res.json({
+          success: true,
+          message:
+            "If an account with that email exists, a reset link has been sent.",
+        });
       }
       const token = Math.random().toString(36).substr(2, 9);
       const expires = new Date(Date.now() + 3600000); // 1 hour
@@ -351,13 +442,26 @@ const port = 5502;
         [email, token, expires],
       );
       const resetLink = `http://localhost:3000/reset-password/${token}`;
-      // Simulate email sending
       console.log(`Reset link for ${email}: ${resetLink}`);
-      res.send(
-        "If an account with that email exists, a reset link has been sent.",
-      );
+      res.json({
+        success: true,
+        message:
+          "If an account with that email exists, a reset link has been sent.",
+      });
     } catch (err) {
-      res.status(500).send("Error processing request");
+      console.error("Forgot password error:", err);
+      res.status(500).json({ error: "Error processing request" });
+    }
+  });
+
+  app.post("/auth/logout", async (req, res) => {
+    try {
+      req.session.destroy(() => {});
+      res.clearCookie(JWT_COOKIE_NAME);
+      res.json({ success: true, message: "Logged out" });
+    } catch (err) {
+      console.error("Logout error:", err);
+      res.status(500).json({ error: "Error logging out" });
     }
   });
 
@@ -417,6 +521,7 @@ const port = 5502;
         'Password reset successfully. <a href="/dashboard.html">Login</a>',
       );
     } catch (err) {
+      console.error("Reset password error:", err);
       res.status(500).send("Error resetting password");
     }
   });
@@ -3007,29 +3112,29 @@ const port = 5502;
 
   // API endpoint to check user login and approval status
   app.get("/api/user-status", async (req, res) => {
-    if (!req.session.user) {
+    const email = req.user?.email || req.session.user;
+    if (!email) {
       return res.json({ loggedIn: false, approved: false });
     }
 
-    // Check if user is approved (except admins)
     if (
-      req.session.user === "biologia.info1@gmail.com" ||
-      req.session.user === "admin@medminds.com"
+      email === "biologia.info1@gmail.com" ||
+      email === "admin@medminds.com"
     ) {
       return res.json({
         loggedIn: true,
         approved: true,
-        email: req.session.user,
+        email,
       });
     }
 
     try {
       const [user] = await db.execute(
         "SELECT approved FROM users WHERE email = ?",
-        [req.session.user],
+        [email],
       );
       const approved = user.length > 0 && user[0].approved;
-      res.json({ loggedIn: true, approved: approved, email: req.session.user });
+      res.json({ loggedIn: true, approved: approved, email });
     } catch (error) {
       console.error("Error checking user status:", error);
       res.status(500).json({ error: "Error checking user status" });
@@ -3157,7 +3262,7 @@ const port = 5502;
   app.use(express.static(path.join(__dirname)));
   app.use("/uploads", express.static("uploads"));
 
-  app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
   });
 })();

@@ -1,21 +1,20 @@
 // ================================
-// SUPABASE CONFIG
+// APP CONFIG
 // ================================
+let supabaseClient = null;
+let ADMIN_EMAILS = [];
 
-const SUPABASE_URL = "https://lnwzalpnyawhbiuunxoo.supabase.co";
-const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxud3phbHBueWF3aGJpdXVueG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTkxNTMsImV4cCI6MjA5MzYzNTE1M30.cxScci7MZ7Hq-za6AF4gDcOOtjkZhbMU7LI7aPD724o";
+async function initializeConfig() {
+  try {
+    const response = await fetch("/api/config");
+    const config = await response.json();
+    ADMIN_EMAILS = config.adminEmails || [];
+  } catch (error) {
+    console.error("Failed to load config:", error);
+  }
+}
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ============================================================
-// EMAIL — Gmail via Supabase Edge Function
-// Sends directly FROM service.medminds@gmail.com
-// Edge Function file: supabase/functions/send-email/index.ts
-// Templates: approval | rejection | notification | new_quiz | result
-// ============================================================
-
-const EMAIL_ENDPOINT = `${SUPABASE_URL}/functions/v1/send-email`;
+initializeConfig();
 
 // Send a single email
 // templateOrBody: template name OR plain text body string (legacy)
@@ -216,21 +215,22 @@ async function login() {
   }
 
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
+    const response = await fetch("/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
     });
-    if (error) {
-      _pageAlert(error.message);
+    const result = await response.json();
+
+    if (!result.success) {
+      _pageAlert(result.error || "Invalid credentials");
       return;
     }
 
-    // ── Register this device session (max 2 devices allowed) ──
-    const limitReached = await registerSession(data.user.id);
-    if (limitReached) return; // device-limit.html redirect already happened
-
-    // Role-based redirect — reads from users table
-    await redirectByRole(data.user.id);
+    window.location.href = result.redirect || "/home.html";
   } catch (e) {
     console.error("Login error:", e);
     _pageAlert("Login failed. Please try again.");
@@ -609,8 +609,14 @@ async function calculateResult() {
 // ================================
 
 async function logout() {
-  await removeCurrentSession();
-  await supabaseClient.auth.signOut();
+  try {
+    await fetch("/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (e) {
+    console.error("Logout error:", e);
+  }
   window.location.href = "index.html";
 }
 
@@ -660,76 +666,14 @@ function getDeviceInfo() {
 
 // Register this device session after login
 async function registerSession(userId) {
-  try {
-    const token = getLocalSessionToken();
-    const deviceInfo = getDeviceInfo();
-
-    // Check how many active sessions exist
-    const { data: sessions } = await supabaseClient
-      .from("user_sessions")
-      .select("id, session_token, device_info, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: true });
-
-    const existing = sessions || [];
-
-    // Check if this device already has a session registered
-    const alreadyRegistered = existing.find((s) => s.session_token === token);
-
-    if (!alreadyRegistered) {
-      // Admin = 10 devices, Student = 2 devices
-      const { data: authUser } = await supabaseClient.auth.getUser();
-      const isAdminUser = ADMIN_EMAILS.includes(authUser?.user?.email);
-      const deviceLimit = isAdminUser ? MAX_DEVICES_ADMIN : MAX_DEVICES;
-
-      if (existing.length >= deviceLimit) {
-        // Device limit reached — redirect, user stays logged in
-        sessionStorage.setItem("mm_pending_userid", userId);
-        sessionStorage.setItem(
-          "mm_pending_devices",
-          JSON.stringify(
-            existing.map((s) => ({
-              device: s.device_info,
-              since: s.created_at,
-            })),
-          ),
-        );
-        window.location.href = "device-limit.html";
-        return true; // signals login() to stop
-      }
-
-      // Under limit — register current device normally
-      await supabaseClient.from("user_sessions").insert({
-        user_id: userId,
-        session_token: token,
-        device_info: deviceInfo,
-        last_active: new Date().toISOString(),
-      });
-    } else {
-      // Update last_active for existing session
-      await supabaseClient
-        .from("user_sessions")
-        .update({ last_active: new Date().toISOString() })
-        .eq("session_token", token);
-    }
-  } catch (e) {
-    console.error("registerSession error:", e);
-  }
+  // Device/session tracking is now managed by the backend via JWT/session cookies.
+  return false;
 }
 
 // Remove current device session on logout
 async function removeCurrentSession() {
-  try {
-    const token = localStorage.getItem(SESSION_KEY);
-    if (!token) return;
-    await supabaseClient
-      .from("user_sessions")
-      .delete()
-      .eq("session_token", token);
-    localStorage.removeItem(SESSION_KEY);
-  } catch (e) {
-    console.error("removeCurrentSession error:", e);
-  }
+  // No client-side Supabase session cleanup required for JWT-based auth.
+  return;
 }
 
 // Validate that this session is still active (run on every page load)

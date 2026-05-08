@@ -8,7 +8,6 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
@@ -270,23 +269,18 @@
       })();
 
       (async function () {
-        const SUPABASE_URL = "https://lnwzalpnyawhbiuunxoo.supabase.co";
-        const SUPABASE_KEY =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxud3phbHBueWF3aGJpdXVueG9vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTkxNTMsImV4cCI6MjA5MzYzNTE1M30.cxScci7MZ7Hq-za6AF4gDcOOtjkZhbMU7LI7aPD724o";
         try {
-          const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-          const { data } = await client.auth.getUser();
-          if (data.user) {
-            const { data: userRow } = await client
-              .from("users")
-              .select("role")
-              .eq("id", data.user.id)
-              .single();
-            window.location.href =
-              userRow?.role === "admin" ? "admin.html" : "quiz-selection.html";
+          const response = await fetch("/api/user-status", {
+            credentials: "include",
+          });
+          const result = await response.json();
+          if (result.user) {
+            const redirectUrl =
+              result.user.role === "admin" ? "admin-menu.html" : "home.html";
+            window.location.href = redirectUrl;
           }
         } catch (e) {
-          console.error("Auth check:", e);
+          console.error("Auth check error:", e);
         }
       })();
     </script>
@@ -462,116 +456,6 @@
         el.className = `alert ${type} show`;
         setTimeout(() => el.classList.remove("show"), 5000);
       }
-
-      function showModalAlert(message, type = "error") {
-        const el = document.getElementById("resetModalAlert");
-        el.textContent = message;
-        el.className = `alert ${type} show`;
-      }
-
-      let _recoverySessionReady = false;
-
-      function showResetModal() {
-        document.getElementById("resetModal").style.display = "flex";
-        history.replaceState(null, "", window.location.pathname);
-      }
-
-      function handleRecoveryIfNeeded() {
-        // Always register onAuthStateChange listener FIRST
-        // This handles PKCE flow where Supabase exchanges token automatically
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-          if (event === "PASSWORD_RECOVERY") {
-            _recoverySessionReady = true;
-            showResetModal();
-          }
-        });
-
-        // Also check hash for implicit flow (older Supabase projects)
-        const hashParams = new URLSearchParams(
-          window.location.hash.replace("#", ""),
-        );
-        if (hashParams.get("type") === "recovery") {
-          // In implicit flow, session is already set from the hash
-          // Give Supabase a moment to process it
-          setTimeout(async () => {
-            const { data } = await supabaseClient.auth.getSession();
-            if (data.session) {
-              _recoverySessionReady = true;
-            }
-            showResetModal();
-          }, 300);
-        }
-      }
-
-      async function submitNewPassword() {
-        const newPw = document.getElementById("newPassword").value;
-        const confPw = document.getElementById("confirmNewPassword").value;
-        const btn = document.getElementById("resetPasswordBtn");
-
-        if (!newPw) return showModalAlert("Please enter a new password.");
-        if (newPw.length < 6)
-          return showModalAlert("Password must be at least 6 characters.");
-        if (newPw !== confPw) return showModalAlert("Passwords do not match.");
-
-        // Verify session exists before attempting update
-        const { data: sessionCheck } = await supabaseClient.auth.getSession();
-        if (!sessionCheck.session && !_recoverySessionReady) {
-          return showModalAlert(
-            "⚠️ Session expired. Please request a new reset link.",
-            "error",
-          );
-        }
-
-        btn.disabled = true;
-        btn.textContent = "Updating…";
-
-        try {
-          const { error } = await supabaseClient.auth.updateUser({
-            password: newPw,
-          });
-          if (error) {
-            if (
-              error.message.includes("session") ||
-              error.message.includes("Auth")
-            ) {
-              showModalAlert(
-                "Session expired. Please request a new password reset link.",
-                "error",
-              );
-              btn.disabled = false;
-              btn.textContent = "Update Password";
-              return;
-            }
-            throw error;
-          }
-
-          showModalAlert("✅ Password updated! Redirecting...", "success");
-
-          setTimeout(async () => {
-            document.getElementById("resetModal").style.display = "none";
-            const { data } = await supabaseClient.auth.getUser();
-            if (data?.user) {
-              const { data: userRow } = await supabaseClient
-                .from("users")
-                .select("role")
-                .eq("id", data.user.id)
-                .single();
-              window.location.href =
-                userRow?.role === "admin"
-                  ? "admin.html"
-                  : "quiz-selection.html";
-            } else {
-              window.location.href = "index.html";
-            }
-          }, 1500);
-        } catch (e) {
-          showModalAlert(e.message || "Failed to update password.");
-          btn.disabled = false;
-          btn.textContent = "Update Password";
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", handleRecoveryIfNeeded);
     </script>
   </body>
 </html>
