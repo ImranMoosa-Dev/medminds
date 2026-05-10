@@ -1,24 +1,32 @@
+import db from "../config/MedMindsDB.js";
+import JWT from "jsonwebtoken";
+import nodemailer from "nodemailer";
+
 // Signup controller
 export const signupController = async (req, res) => {
   const {
     fullName,
     fatherName,
     district,
-    whatsappNumber,
+    whatsapp,
     status,
     email,
     password,
     confirmPassword,
   } = req.body;
+  console.log("body called:", req.body);
   if (password !== confirmPassword) {
-    return res.json({ error: "Passwords do not match." });
+    return res
+      .status(400)
+      .send({ success: false, error: "Passwords do not match." });
   }
   if (
     password.length < 8 ||
     !/\d/.test(password) ||
     !/[a-zA-Z]/.test(password)
   ) {
-    return res.json({
+    return res.status(400).send({
+      success: false,
       error:
         "Password must be at least 8 characters and contain at least one number and one letter.",
     });
@@ -30,7 +38,7 @@ export const signupController = async (req, res) => {
         fullName,
         fatherName,
         district,
-        whatsappNumber,
+        whatsapp,
         status,
         email,
         password,
@@ -38,34 +46,35 @@ export const signupController = async (req, res) => {
         false,
       ],
     );
-    res.json({
+    return res.status(201).send({
       success: true,
       message: "Signup successful. Your account is pending admin approval.",
-      redirect: "/dashboard.html",
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error signing up" });
+    res.status(500).send({ success: false, error: "Error signing up" });
   }
 };
 
 // Login controller
 export const loginController = async (req, res) => {
   const { email, password, returnUrl } = req.body;
-
   try {
     const [rows] = await db.execute("SELECT * FROM users WHERE email = ?", [
       email.trim(),
     ]);
 
     if (rows.length === 0) {
-      return res.json({ error: "Invalid credentials" });
+      return res
+        .status(400)
+        .send({ success: false, error: "Invalid credentials" });
     }
-
     const user = rows[0];
 
     if (user.password !== password) {
-      return res.json({ error: "Invalid credentials" });
+      return res
+        .status(400)
+        .send({ success: false, error: "Invalid credentials" });
     }
 
     if (
@@ -73,7 +82,10 @@ export const loginController = async (req, res) => {
       user.email !== "admin@medminds.com"
     ) {
       if (!user.approved) {
-        return res.json({ error: "Your account is pending admin approval." });
+        return res.status(400).send({
+          success: false,
+          error: "Your account is pending admin approval.",
+        });
       }
     }
 
@@ -92,14 +104,15 @@ export const loginController = async (req, res) => {
           ? "admin"
           : "student",
     };
-    const token = jwt.sign(tokenPayload, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
+    // generate JWT token
+    const token = JWT.sign(tokenPayload, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
     });
 
-    res.cookie(JWT_COOKIE_NAME, token, {
+    res.cookie(process.env.JWT_COOKIE_NAME, token, {
       httpOnly: true,
       sameSite: "lax",
-      secure: NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -113,30 +126,51 @@ export const loginController = async (req, res) => {
     } catch (err) {
       console.error("Error recording login date:", err);
     }
-
-    let redirectUrl = "/home.html";
-    if (
+    const role =
       user.email === "biologia.info1@gmail.com" ||
       user.email === "admin@medminds.com"
-    ) {
-      redirectUrl = "/admin-menu.html";
+        ? "admin"
+        : "student";
+
+    let redirectUrl = "/home";
+
+    if (role === "admin") {
+      redirectUrl = "/admin";
     }
+
+    if (returnUrl && returnUrl.startsWith("/")) {
+      redirectUrl = returnUrl;
+    }
+
     // Use returnUrl if provided and valid
     if (returnUrl && returnUrl.startsWith("/")) {
       redirectUrl = returnUrl;
     }
 
-    res.json({
+    return res.status(200).send({
       success: true,
       message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        fullName: user.fullName,
+        fatherName: user.fatherName,
+        district: user.district,
+        whatsappNumber: user.whatsapp,
+        status: user.status,
+        email: user.email,
+        approved: Boolean(user.approved),
+        role,
+      },
       redirect: redirectUrl,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error logging in" });
+    res.status(500).send({ success: false, error: "Error logging in" });
   }
 };
 
+// forgot password controller
 export const forgotPasswordController = async (req, res) => {
   const { email } = req.body;
   try {
@@ -144,27 +178,92 @@ export const forgotPasswordController = async (req, res) => {
       email,
     ]);
     if (rows.length === 0) {
-      return res.json({
+      return res.status(200).send({
         success: true,
         message:
           "If an account with that email exists, a reset link has been sent.",
       });
     }
+    const user = rows[0];
+
     const token = Math.random().toString(36).substr(2, 9);
     const expires = new Date(Date.now() + 3600000); // 1 hour
     await db.execute(
       "INSERT INTO password_resets (email, token, expires) VALUES (?, ?, ?)",
       [email, token, expires],
     );
-    const resetLink = `http://localhost:3000/reset-password/${token}`;
-    console.log(`Reset link for ${email}: ${resetLink}`);
-    res.json({
+
+    // Configure transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      secure: true,
+      auth: {
+        user: process.env.MY_GMAIL,
+        pass: process.env.MY_PASSWORD,
+      },
+    });
+
+    // Compose email
+    const reciever = {
+      from: process.env.MEDMINDS_SERVICE_EMAIL,
+      to: email,
+      subject: "Password Reset Request",
+      html: `
+        <p>Hello ${user.fullName},</p>
+        <p>You requested to reset your password. Click below to reset it:</p>
+        <a href="${process.env.CLIENT_URL}/reset-password/${token}" 
+          style="background:#0d6efd;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">
+          Reset Password
+        </a>
+        <p>This link will expire in 15 minutes.</p>
+      `,
+    };
+    await transporter.sendMail(reciever);
+    return res.status(200).send({
       success: true,
       message:
         "If an account with that email exists, a reset link has been sent.",
     });
   } catch (err) {
     console.error("Forgot password error:", err);
-    res.status(500).json({ error: "Error processing request" });
+    res.status(500).send({ success: false, error: "Error processing request" });
+  }
+};
+
+// reset password controller
+export const resetPasswordController = async (req, res) => {
+  const { token, password } = req.body;
+  if (!password) {
+    return res.send("Please provide New Password.");
+  }
+  if (
+    password.length < 8 ||
+    !/\d/.test(password) ||
+    !/[a-zA-Z]/.test(password)
+  ) {
+    return res.send(
+      "Password must be at least 8 characters and contain at least one number and one letter.",
+    );
+  }
+  try {
+    const [rows] = await db.execute(
+      "SELECT * FROM password_resets WHERE token = ? AND expires > NOW()",
+      [token],
+    );
+    if (rows.length === 0) {
+      return res.send("Invalid or expired token.");
+    }
+    const email = rows[0].email;
+    await db.execute("UPDATE users SET password = ? WHERE email = ?", [
+      password,
+      email,
+    ]);
+    await db.execute("DELETE FROM password_resets WHERE token = ?", [token]);
+    res.send(
+      'Password reset successfully. <a href="/dashboard.html">Login</a>',
+    );
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).send("Error resetting password");
   }
 };

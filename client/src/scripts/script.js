@@ -627,7 +627,7 @@ async function logout() {
 
 const MAX_DEVICES = 2; // Students: max 2 devices
 const MAX_DEVICES_ADMIN = 10; // Admins: max 10 devices
-const ADMIN_EMAILS = ["admin@medminds.com", "service.medminds@gmail.com"];
+// const ADMIN_EMAILS = ["admin@medminds.com", "service.medminds@gmail.com"];
 const SESSION_KEY = "mm_session_token";
 
 // Generate unique token for this device/tab

@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --blue-main: #3b82f6;
+    --blue-dark: #1e3a8a;
+    --blue-soft: #f8fafc;
+    --bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --radius: 12px;
+    --shadow-soft: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-hover: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: var(--text-main);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.6;
+}
+
+header {
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue-main));
+    padding: 15px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-soft);
+    border-bottom: 3px solid #60a5fa;
+    position: relative;
+}
+
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.hamburger div {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 4px 0;
+    transition: 0.3s;
+}
+
+.hamburger.active div:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.hamburger.active div:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active div:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
+header nav {
+    display: flex;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+header nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+}
+
+header nav a:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+section {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+footer {
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue-main));
+    color: white;
+    text-align: center;
+    padding: 20px;
+    border-top: 3px solid #60a5fa;
+}
+
+/* Professional Button Styles */
+.button {
+    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Card Styles */
+.card {
+    background: var(--blue-soft);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    padding: 20px;
+    margin: 20px 0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hamburger {
+        display: flex;
+        order: 2;
+    }
+
+    header nav {
+        display: none;
+        width: 100%;
+        order: 3;
+    }
+
+    header nav.show {
+        display: block;
+    }
+
+    header nav ul {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        padding: 20px 0;
+    }
+
+    header nav a {
+        padding: 12px 20px;
+        width: 100%;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+    section {
+        padding: 20px 15px;
+    }
+
+    .button {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 10px 15px;
+    }
+
+    .hamburger div {
+        width: 20px;
+        height: 2px;
+        margin: 3px 0;
+    }
+
+    header nav ul {
+        gap: 10px;
+        padding: 15px 0;
+    }
+
+    header nav a {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    section {
+        padding: 15px 10px;
+    }
+}
+
+/* Form Styles */
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    header {
+        padding: 10px 20px;
+    }
+    section {
+        padding: 30px 15px;
+    }
+    .card {
+        margin: 15px 0;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        padding: 20px;
+    }
+    section {
+        padding: 20px 10px;
+    }
+    .button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+    .card {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 15px;
+    }
+    section {
+        padding: 15px 5px;
+    }
+    .button {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    .card {
+        margin: 10px 0;
+        padding: 10px;
+    }
+    footer {
+        padding: 15px;
+    }
+}

@@ -18,7 +18,7 @@ adminRoutes.get("/api/admin/notes", async (req, res) => {
   }
 });
 
-app.get("/get-question/:id", async (req, res) => {
+adminRoutes.get("/get-question/:id", async (req, res) => {
   if (
     req.session.user === "biologia.info1@gmail.com" ||
     req.session.user === "admin@medminds.com"

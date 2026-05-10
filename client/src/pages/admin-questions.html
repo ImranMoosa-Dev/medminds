@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Questions - MedMinds MDCAT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="global.css">
+<style>
+
+:root {
+    --blue-main: #3b82f6;
+    --blue-dark: #1e3a8a;
+    --blue-soft: #dbeafe;
+    --bg: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --radius: 16px;
+    --shadow-soft: 0 10px 30px rgba(0,0,0,0.08);
+    --shadow-hover: 0 20px 45px rgba(59,130,246,0.25);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system;
+    background: radial-gradient(circle at top, #eaf2ff, var(--bg));
+    color: var(--text-main);
+    line-height: 1.7;
+}
+
+/* ===============================
+   HEADER
+=============================== */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(14px);
+    padding: 0px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.logo-text {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-text h1 {
+    font-size: clamp(1.6rem, 5vw, 1.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+    color: transparent;                   /* Fallback for Firefox */
+    -webkit-background-clip: text;        /* Chrome, Safari, Edge */
+    background-clip: text;                /* Firefox */
+    -webkit-text-fill-color: transparent; /* Chrome, Safari, Edge */
+}
+
+.logo-text p {
+    margin-left: 10px;
+}
+
+.logo-text p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* NAV */
+header nav ul {
+    list-style: none;
+    display: flex;
+    gap: 28px;
+}
+
+header nav a {
+    text-decoration: none;
+    color: var(--text-main);
+    font-weight: 600;
+    padding: 10px 22px;
+    border-radius: 999px;
+    transition: all 0.35s ease;
+}
+
+header nav a:hover {
+    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+    color: white;
+    box-shadow: var(--shadow-hover);
+}
+
+/* HAMBURGER */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.hamburger div {
+    width: 25px;
+    height: 3px;
+    background-color: var(--blue-dark);
+    margin: 4px 0;
+    transition: 0.3s;
+}
+
+.hamburger.active div:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.hamburger.active div:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active div:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
+/* ===============================
+   SECTIONS
+=============================== */
+.section {
+    max-width: 1200px;
+    margin: 90px auto;
+    padding: 0 25px;
+}
+
+.questions {
+    max-width: 1000px;
+    margin: 90px auto;
+    padding: 50px;
+    background: linear-gradient(145deg, white, var(--blue-soft));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input, select {
+    margin-bottom: 15px;
+    padding: 12px;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--blue-main);
+    box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+}
+
+button {
+    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.questions ul {
+    list-style: none;
+    padding: 0;
+}
+
+.questions li {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ===============================
+   FOOTER
+=============================== */
+footer {
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue-main));
+    color: white;
+    text-align: center;
+    padding: 35px 20px;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+/* ===============================
+   MOBILE
+=============================== */
+@media (max-width: 768px) {
+    header {
+        padding: 20px;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    header nav {
+        display: none;
+        width: 100%;
+    }
+
+    header nav.show {
+        display: block;
+    }
+
+    header nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .questions {
+        padding: 30px 20px;
+    }
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: var(--blue-soft);
+}
+
+button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    background: var(--blue-main);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--blue-dark);
+}
+</style>
+</head>
+<body>
+<header>
+    <div class="logo-text">
+        <div>
+            <h1>MedMinds MDCAT</h1>
+            <p>Your future begins here</p>
+        </div>
+    </div>
+
+
+
+    <nav>
+        <ul>
+            <li><a href="admin-menu.html"><i class="fas fa-tachometer-alt"></i> Menu</a></li>
+            <li><a href="/admin/students"><i class="fas fa-users"></i> Students</a></li>
+            <li><a href="/admin-questions.html"><i class="fas fa-question-circle"></i> Q-bank formator</a></li>
+            <li><a href="/admin-quizzes.html"><i class="fas fa-clipboard-list"></i> Quiz maker</a></li>
+            <li><a href="/admin-updates.html"><i class="fas fa-bullhorn"></i> Updates</a></li>
+            <li><a href="/admin-notes.html"><i class="fas fa-file-alt"></i> Notes</a></li>
+            <li><a href="#" onclick="confirmLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="hamburger" onclick="toggleNav()">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</header>
+    <section class="section questions">
+        <h2>Q-Bank Questions</h2>
+        <div id="message" style="display:none; margin-bottom:20px; padding:15px; border-radius:8px; font-weight:600;"></div>
+        <form id="add-question-form">
+            <input type="hidden" name="id" id="question-id">
+            <label>Subject: <select name="subject" id="subject-select">
+                <option>Biology</option>
+                <option>Chemistry</option>
+                <option>Physics</option>
+                <option>English</option>
+                <option>Logical Reasoning</option>
+                <option>Other</option>
+            </select></label><br>
+            <input type="text" id="other-subject" name="otherSubject" placeholder="Specify subject" style="display:none;"><br><br>
+            <label>Chapter: <input type="text" name="chapter" required></label><br><br>
+            <input type="text" name="question" placeholder="Question" required><br><br>
+            <input type="text" name="opt1" placeholder="Option 1" required><br>
+            <input type="text" name="opt2" placeholder="Option 2" required><br>
+            <input type="text" name="opt3" placeholder="Option 3" required><br>
+            <input type="text" name="opt4" placeholder="Option 4" required><br><br>
+            <input type="number" name="correct" min="1" max="4" placeholder="Correct option (1-4)" required><br><br><textarea name="explanation" placeholder="Explanation" required></textarea><br><br>
+            <button type="submit" id="submit-btn">Add Question</button>
+        </form>
+        <h2>Existing Questions</h2>
+        <table id="questions-table"></table>
+    </section>
+<footer>
+    <p>&copy; 2025 MedMinds MDCAT.</p>
+    <p>
+        <i class="fas fa-envelope"></i>
+        <a href="mailto:admin@medminds.com">admin@medminds.com</a> |
+        <i class="fab fa-whatsapp"></i>
+        <a href="https://whatsapp.com/channel/0029VbAO9hc7IUYXO5QyIu1E" target="_blank">MedMinds MDCAT Test Session</a> |
+        <i class="fab fa-instagram"></i>
+        <a href="https://www.instagram.com/medminds_mdcat/" target="_blank">MedMinds MDCAT</a>
+    </p>
+</footer>
+<script>
+function confirmLogout() { if(confirm('Are you sure you want to logout?')){ window.location.href='/logout'; } }
+function toggleNav() { document.querySelector("header nav").classList.toggle("show"); document.querySelector(".hamburger").classList.toggle("active"); }
+document.getElementById('subject-select').addEventListener('change', function() {
+    const otherInput = document.getElementById('other-subject');
+    if (this.value === 'Other') {
+        otherInput.style.display = 'block';
+    } else {
+        otherInput.style.display = 'none';
+    }
+});
+function editQuestion(id) {
+    fetch(`/get-question/${id}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const q = data.question;
+            document.getElementById('question-id').value = q.id;
+            document.getElementById('subject-select').value = q.subject;
+            document.getElementById('other-subject').value = q.subject === 'Other' ? '' : q.subject;
+            document.querySelector('input[name="chapter"]').value = q.chapter;
+            document.querySelector('input[name="question"]').value = q.question;
+            document.querySelector('input[name="opt1"]').value = q.opt1;
+            document.querySelector('input[name="opt2"]').value = q.opt2;
+            document.querySelector('input[name="opt3"]').value = q.opt3;
+            document.querySelector('input[name="opt4"]').value = q.opt4;
+            document.querySelector('input[name="correct"]').value = q.correct + 1; // Since correct is 0-based
+            document.querySelector('textarea[name="explanation"]').value = q.explanation;
+            document.getElementById('submit-btn').textContent = 'Update Question';
+            document.getElementById('subject-select').dispatchEvent(new Event('change'));
+        }
+    })
+    .catch(error => {
+        alert('Error loading question');
+    });
+}
+
+document.getElementById('add-question-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/add-question', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+    })
+    .then(response => {
+        return response.text().then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.log('Failed to parse JSON from /add-question in admin-questions.html, response text:', text);
+                throw e;
+            }
+        });
+    })
+    .then(data => {
+        alert(data.message);
+        if (data.success) {
+            this.reset();
+            document.getElementById('question-id').value = '';
+            document.getElementById('submit-btn').textContent = 'Add Question';
+            window.location.reload(); // Reload to show the updated question in the list
+        }
+    })
+    .catch(error => {
+        alert('Error occurred');
+        console.log('Error:', error);
+    });
+});
+
+async function loadQuestions() {
+    try {
+        const response = await fetch('/api/admin/questions', { credentials: 'include' });
+        const questions = await response.json();
+        displayQuestions(questions);
+    } catch (error) {
+        console.error('Error loading questions:', error);
+    }
+}
+
+function displayQuestions(questions) {
+    const table = document.getElementById('questions-table');
+    let html = '<thead><tr><th>Subject</th><th>Chapter</th><th>Question</th><th>Correct</th><th>Published</th><th>Actions</th></tr></thead><tbody>';
+    questions.forEach(q => {
+        html += `<tr>
+            <td>${q.subject}</td>
+            <td>${q.chapter}</td>
+            <td>${q.question.substring(0, 50)}...</td>
+            <td>${q.correct + 1}</td>
+            <td>${q.published ? 'Yes' : 'No'}</td>
+            <td>
+                <button onclick="editQuestion(${q.id})">Edit</button>
+                <form method="post" action="/delete-question" style="display:inline;">
+                    <button type="submit" name="id" value="${q.id}">Delete</button>
+                </form>
+            </td>
+        </tr>`;
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+}
+
+loadQuestions();
+</script>
+</body>
+</html>
