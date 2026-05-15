@@ -7,11 +7,16 @@ import multer from "multer";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 import authRoutes from "./routes/authRoutes.js";
+import initDB from "./database/initDB.js";
+import studentRoutes from "./routes/studentRoutes.js";
 // import adminRoutes from "./routes/adminRoutes.js";
 // import questionRoutes from "./routes/questionRoutes.js";
 // import notesRoutes from "./routes/notesRoutes.js";
 const app = express();
 const upload = multer({ dest: "uploads/" });
+
+// Initialize the database and create tables if they don't exist
+initDB();
 
 // config dotenv
 dotenv.config();
@@ -47,6 +52,18 @@ app.use(
   }),
 );
 
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/student", studentRoutes);
+// app.use("/api/v1/admin", adminRoutes);
+// app.use("/api/v1/question", questionRoutes);
+// app.use("/api/v1/notes", notesRoutes);
+// Static file serving should come after API routes
+// app.use(express.static(path.join(__dirname)));
+// app.use("/uploads", express.static("uploads"));
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}.`.bgYellow);
+});
 // function parseCookies(req) {
 //   const header = req.headers.cookie || "";
 //   return header.split(";").reduce((cookies, pair) => {
@@ -95,162 +112,7 @@ app.use(
 //   });
 // });
 
-// app.get("/api/user-status", (req, res) => {
-//   if (req.user) {
-//     return res.json({ user: req.user });
-//   }
-//   res.json({ user: null });
-// });
 
-// (async () => {
-//   const db = await dbPromise;
-//   await db.execute(`CREATE TABLE IF NOT EXISTS users (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         fullName VARCHAR(255),
-//         email VARCHAR(255) UNIQUE,
-//         password VARCHAR(255),
-//         loggedIn BOOLEAN DEFAULT FALSE,
-//         approved BOOLEAN DEFAULT FALSE
-//     )`);
-
-//   await db.execute(`CREATE TABLE IF NOT EXISTS questions (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         testName VARCHAR(255),
-//         testType VARCHAR(255),
-//         subject VARCHAR(255),
-//         chapter VARCHAR(255),
-//         question TEXT,
-//         opt1 TEXT,
-//         opt2 TEXT,
-//         opt3 TEXT,
-//         opt4 TEXT,
-//         correct INT,
-//         published BOOLEAN DEFAULT FALSE
-//     )`);
-//   await db
-//     .execute(`ALTER TABLE questions ADD COLUMN published BOOLEAN DEFAULT FALSE`)
-//     .catch(() => {});
-//   await db.execute(`CREATE TABLE IF NOT EXISTS quizzes (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         email VARCHAR(255),
-//         date DATETIME,
-//         results JSON,
-//         quiz_id INT
-//     )`);
-//   await db
-//     .execute(`ALTER TABLE quizzes ADD COLUMN quiz_id INT`)
-//     .catch(() => {});
-//   await db.execute(`CREATE TABLE IF NOT EXISTS quiz_definitions (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         name VARCHAR(255),
-//         subject VARCHAR(255),
-//         topics VARCHAR(255),
-//         duration INT,
-//         totalMcqs INT,
-//         questions JSON,
-//         start_time DATETIME,
-//         end_time DATETIME,
-//         testType VARCHAR(255)
-//     )`);
-//   await db.execute(`CREATE TABLE IF NOT EXISTS password_resets (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         email VARCHAR(255),
-//         token VARCHAR(255),
-//         expires DATETIME
-//     )`);
-//   await db.execute(`CREATE TABLE IF NOT EXISTS updates (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         title VARCHAR(255) NOT NULL,
-//         content TEXT NOT NULL,
-//         image VARCHAR(255),
-//         date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//     )`);
-//   await db
-//     .execute(`ALTER TABLE updates ADD COLUMN published BOOLEAN DEFAULT 1`)
-//     .catch(() => {});
-//   await db
-//     .execute(
-//       `ALTER TABLE updates CHANGE date created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP`,
-//     )
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE users ADD COLUMN fatherName VARCHAR(255)`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE users ADD COLUMN district VARCHAR(255)`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE users ADD COLUMN whatsapp VARCHAR(255)`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE users ADD COLUMN status VARCHAR(255)`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE questions ADD COLUMN chapter VARCHAR(255)`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE questions ADD COLUMN image VARCHAR(255)`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE questions ADD COLUMN explanation TEXT`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE questions ADD COLUMN quiz_only BOOLEAN DEFAULT FALSE`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE quiz_definitions ADD COLUMN start_time DATETIME`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE quiz_definitions ADD COLUMN end_time DATETIME`)
-//     .catch(() => {});
-//   await db
-//     .execute(`ALTER TABLE quiz_definitions ADD COLUMN testType VARCHAR(255)`)
-//     .catch(() => {});
-//   await db.execute(`CREATE TABLE IF NOT EXISTS mistakes (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         email VARCHAR(255),
-//         question TEXT,
-//         options JSON,
-//         correct INT,
-//         userAnswer INT,
-//         date DATETIME DEFAULT CURRENT_TIMESTAMP
-//     )`);
-//   await db.execute(
-//     `CREATE TABLE IF NOT EXISTS q_bank_attempts (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255), date DATE, UNIQUE KEY unique_attempt (email, date))`,
-//   );
-//   await db.execute(
-//     `CREATE TABLE IF NOT EXISTS login_dates (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255), date DATE, UNIQUE KEY unique_login (email, date))`,
-//   );
-//   await db.execute(`CREATE TABLE IF NOT EXISTS settings (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         key_name VARCHAR(255) UNIQUE,
-//         value TEXT
-//     )`);
-//   await db.execute(`CREATE TABLE IF NOT EXISTS notes (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         subject VARCHAR(255),
-//         title VARCHAR(255),
-//         filename VARCHAR(255),
-//         originalname VARCHAR(255),
-//         mimetype VARCHAR(255),
-//         size INT,
-//         uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//     )`);
-//   await db.execute(`CREATE TABLE IF NOT EXISTS q_bank_answers (
-//         id INT AUTO_INCREMENT PRIMARY KEY,
-//         email VARCHAR(255),
-//         question_id INT,
-//         user_answer INT,
-//         date DATETIME DEFAULT CURRENT_TIMESTAMP,
-//         UNIQUE KEY unique_answer (email, question_id)
-//     )`);
-//   // Insert default values
-//   await db.execute(
-//     "INSERT IGNORE INTO settings (key_name, value) VALUES (?, ?)",
-//     ["syllabus_file", "sample-test.pdf"],
-//   );
-
-//   // Database setup complete
 
 //   // Ensure admin users exist
 //   const adminEmails = ["biologia.info1@gmail.com", "admin@medminds.com"];
@@ -301,32 +163,6 @@ app.use(
 //     }
 //   });
 
-//   app.get("/reset-password/:token", async (req, res) => {
-//     const { token } = req.params;
-//     try {
-//       const [rows] = await db.execute(
-//         "SELECT * FROM password_resets WHERE token = ? AND expires > NOW()",
-//         [token],
-//       );
-//       if (rows.length === 0) {
-//         return res.send("Invalid or expired token.");
-//       }
-//       const html = `
-//                 <form action="/reset-password" method="post">
-//                     <input type="hidden" name="token" value="${token}">
-//                     <input type="password" name="newPassword" placeholder="New Password" required>
-//                     <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
-//                     <button type="submit">Reset Password</button>
-//                 </form>
-//             `;
-//       res.send(html);
-//     } catch (err) {
-//       res.status(500).send("Error");
-//     }
-//   });
-
-  
-
 //   app.get("/admin-updates.html", (req, res) => {
 //     if (
 //       req.session.user === "biologia.info1@gmail.com" ||
@@ -344,29 +180,6 @@ app.use(
 //       req.session.user === "admin@medminds.com"
 //     ) {
 //       res.sendFile(path.join(__dirname, "admin-notes.html"));
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/admin-students.html", (req, res) => {
-//     if (req.session.user === "biologia.info1@gmail.com") {
-//       res.sendFile(path.join(__dirname, "admin-students.html"));
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/admin", (req, res) => {
-//     res.redirect("/admin-menu.html");
-//   });
-
-//   app.get("/admin/questions", (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       res.redirect("/admin-questions.html");
 //     } else {
 //       res.redirect("/dashboard.html");
 //     }
@@ -645,88 +458,6 @@ app.use(
 //     }
 //   });
 
-//   app.post("/delete-note", async (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       const { id } = req.body;
-//       try {
-//         const [note] = await db.execute(
-//           "SELECT filename FROM notes WHERE id = ?",
-//           [id],
-//         );
-//         if (note.length > 0) {
-//           const filePath = path.join(__dirname, "uploads", note[0].filename);
-//           fs.unlinkSync(filePath);
-//         }
-//         await db.execute("DELETE FROM notes WHERE id = ?", [id]);
-//         res.redirect("/admin/notes");
-//       } catch (err) {
-//         res.status(500).send("Error deleting note");
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/api/updates", async (req, res) => {
-//     try {
-//       const [updates] = await db.execute(
-//         `SELECT id, title, content, image, created_at as date
-//          FROM updates
-//          ORDER BY created_at DESC`,
-//       );
-
-//       res.json(updates);
-//     } catch (err) {
-//       console.error("Student updates error:", err);
-//       res.status(500).json({ error: "Failed to load updates" });
-//     }
-//   });
-
-//   app.post("/add-update", upload.single("image"), async (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       const { title, content } = req.body;
-//       if (!req.file) {
-//         return res.redirect("/admin/updates?error=Image is required");
-//       }
-//       const image = req.file.filename;
-//       try {
-//         await db.execute(
-//           "INSERT INTO updates (title, content, image) VALUES (?, ?, ?)",
-//           [title, content, image],
-//         );
-//         res.redirect("/admin/updates?success=1");
-//       } catch (err) {
-//         console.error(err);
-//         res.redirect("/admin/updates?error=" + encodeURIComponent(err.message));
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.post("/delete-update", async (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       const { id } = req.body;
-//       try {
-//         await db.execute("DELETE FROM updates WHERE id = ?", [id]);
-//         res.redirect("/admin/updates");
-//       } catch (err) {
-//         res.status(500).send("Error deleting update");
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
 //   app.post("/update-mdcat-date", async (req, res) => {
 //     if (
 //       req.session.user === "biologia.info1@gmail.com" ||
@@ -780,91 +511,8 @@ app.use(
 //     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 //   }
 
-//   app.get("/note-content/:id", async (req, res) => {
-//     try {
-//       const { id } = req.params;
-//       const [note] = await db.execute(
-//         "SELECT filename, mimetype FROM notes WHERE id = ?",
-//         [id],
-//       );
-//       if (note.length === 0) {
-//         return res.status(404).send("Note not found");
-//       }
-//       const filePath = path.join(__dirname, "uploads", note[0].filename);
 
-//       // Security headers to prevent downloading and printing
-//       res.setHeader("Content-Type", note[0].mimetype);
-//       res.setHeader("Content-Disposition", "inline");
-//       res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-//       res.setHeader("Pragma", "no-cache");
-//       res.setHeader("Expires", "0");
-//       res.setHeader("X-Content-Type-Options", "nosniff");
-//       res.setHeader("X-Download-Options", "noopen");
-//       res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
 
-//       fs.createReadStream(filePath).pipe(res);
-//     } catch (err) {
-//       res.status(500).send("Error serving note");
-//     }
-//   });
-
-//   app.post("/approve", async (req, res) => {
-//     if (req.session.user === "biologia.info1@gmail.com") {
-//       const { email, status } = req.body;
-//       const approved = status === "approved";
-//       try {
-//         await db.execute("UPDATE users SET approved = ? WHERE email = ?", [
-//           approved,
-//           email,
-//         ]);
-//         res.redirect("/admin/students");
-//       } catch (err) {
-//         res.status(500).send("Error updating user");
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/api/students", async (req, res) => {
-//     if (
-//       req.session.user !== "biologia.info1@gmail.com" &&
-//       req.session.user !== "admin@medminds.com"
-//     ) {
-//       return res.status(403).json({ error: "Unauthorized" });
-//     }
-//     try {
-//       const [students] = await db.execute(
-//         "SELECT id, fullName, fatherName, district, whatsapp, status, email FROM users WHERE approved = ? AND email NOT IN (?, ?)",
-//         [false, "biologia.info1@gmail.com", "admin@medminds.com"],
-//       );
-//       res.json(students);
-//     } catch (err) {
-//       res.status(500).json({ error: "Error fetching students" });
-//     }
-//   });
-
-//   app.post("/api/students/approve", async (req, res) => {
-//     if (
-//       req.session.user !== "biologia.info1@gmail.com" &&
-//       req.session.user !== "admin@medminds.com"
-//     ) {
-//       return res.status(403).json({ error: "Unauthorized" });
-//     }
-//     const updates = req.body;
-//     try {
-//       for (const update of updates) {
-//         const approved = update.action === "approve";
-//         await db.execute("UPDATE users SET approved = ? WHERE id = ?", [
-//           approved,
-//           update.id,
-//         ]);
-//       }
-//       res.json({ success: true });
-//     } catch (err) {
-//       res.status(500).json({ error: "Error updating approvals" });
-//     }
-//   });
 
 //   app.get("/api/approved-students", async (req, res) => {
 //     if (
@@ -1648,32 +1296,6 @@ app.use(
 //     }
 //   });
 
-//   app.get("/home.html", (req, res) => {
-//     if (req.session.user) {
-//       res.sendFile(path.join(__dirname, "home.html"));
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/dashboard.html", (req, res) => {
-//     res.sendFile(path.join(__dirname, "dashboard.html"));
-//   });
-
-//   app.get("/Q-Bank.html", (req, res) => {
-//     if (!req.session.user) {
-//       return res.redirect("/dashboard.html");
-//     }
-//     res.sendFile(path.join(__dirname, "Q-Bank.html"));
-//   });
-
-//   app.get("/MistakeCorner.html", (req, res) => {
-//     if (!req.session.user) {
-//       return res.redirect("/dashboard.html");
-//     }
-//     res.sendFile(path.join(__dirname, "MistakeCorner.html"));
-//   });
-
 //   app.get("/statics.html", async (req, res) => {
 //     if (!req.session.user) {
 //       return res.redirect("/dashboard.html");
@@ -2040,51 +1662,4 @@ app.use(
 //     res.send(html);
 //   });
 
-//   // API endpoint to check user login and approval status
-//   app.get("/api/user-status", async (req, res) => {
-//     const email = req.user?.email || req.session.user;
-//     if (!email) {
-//       return res.json({ loggedIn: false, approved: false });
-//     }
-
-//     if (
-//       email === "biologia.info1@gmail.com" ||
-//       email === "admin@medminds.com"
-//     ) {
-//       return res.json({
-//         loggedIn: true,
-//         approved: true,
-//         email,
-//       });
-//     }
-
-//     try {
-//       const [user] = await db.execute(
-//         "SELECT approved FROM users WHERE email = ?",
-//         [email],
-//       );
-//       const approved = user.length > 0 && user[0].approved;
-//       res.json({ loggedIn: true, approved: approved, email });
-//     } catch (error) {
-//       console.error("Error checking user status:", error);
-//       res.status(500).json({ error: "Error checking user status" });
-//     }
-//   });
-
-//   app.get("/check-session", (req, res) => {
-//     res.json({ user: req.session.user });
-//   });
-
-app.use("/api/v1/auth", authRoutes);
-// app.use("/api/v1/student", studentRoutes);
-// app.use("/api/v1/admin", adminRoutes);
-// app.use("/api/v1/question", questionRoutes);
-// app.use("/api/v1/notes", notesRoutes);
-// Static file serving should come after API routes
-// app.use(express.static(path.join(__dirname)));
-// app.use("/uploads", express.static("uploads"));
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}.`.bgYellow);
-});
 // })();

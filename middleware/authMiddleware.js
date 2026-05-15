@@ -1,5 +1,4 @@
 import JWT from "jsonwebtoken";
-import userModel from "../models/userModel.js";
 
 // Protected Routes token-based
 export const requireSignIn = async (req, res, next) => {
@@ -13,7 +12,8 @@ export const requireSignIn = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const decode = JWT.verify(token, process.env.JWT_SECRET_KEY);
+
+    const decode = JWT.verify(token, process.env.JWT_SECRET);
     req.user = decode;
     next();
   } catch (error) {

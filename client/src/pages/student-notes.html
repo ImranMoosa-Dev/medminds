@@ -1,580 +1,750 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Notes - MedMinds MDCAT</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<style>
-:root {
-    --blue-main: #3b82f6;
-    --blue-dark: #1e3a8a;
-    --blue-soft: #dbeafe;
-    --bg: #f8fafc;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --radius: 16px;
-    --shadow-soft: 0 10px 30px rgba(0,0,0,0.08);
-    --shadow-hover: 0 20px 45px rgba(59,130,246,0.25);
-}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Notes - MedMinds MDCAT</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --blue-main: #3b82f6;
+        --blue-dark: #1e3a8a;
+        --blue-soft: #dbeafe;
+        --bg: #f8fafc;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --radius: 16px;
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --shadow-hover: 0 20px 45px rgba(59, 130, 246, 0.25);
+      }
 
-* { 
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-body {
-    font-family: 'Segoe UI', system-ui, -apple-system;
-    background: radial-gradient(circle at top, #eaf2ff, var(--bg));
-    color: var(--text-main);
-    line-height: 1.7;
-}
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system;
+        background: radial-gradient(circle at top, #eaf2ff, var(--bg));
+        color: var(--text-main);
+        line-height: 1.7;
+      }
 
-/* ===============================
+      /* ===============================
    HEADER
 ============================== */
-header {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(14px);
-    padding: 18px 50px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-    position: relative;
-}
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(14px);
+        padding: 18px 50px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        position: relative;
+      }
 
-/* ===============================
+      /* ===============================
    LOGO
 ============================== */
-.logo-text {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    position: absolute;
-    left: 50px;
-    top: 50%;
-    transform: translateY(-50%);
-}
+      .logo-text {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        position: absolute;
+        left: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
 
-.logo-text h1 {
-    font-size: clamp(1.6rem, 5vw, 1.8rem);
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-}
+      .logo-text h1 {
+        font-size: clamp(1.6rem, 5vw, 1.8rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+      }
 
-.logo-text p {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
+      .logo-text p {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
 
-/* ===============================
+      /* ===============================
     NAVIGATION
  ============================== */
- header nav {
-     position: absolute;
-     right: 50px;
-     top: 50%;
-     transform: translateY(-50%);
- }
+      header nav {
+        position: absolute;
+        right: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
 
- header nav ul {
-     list-style: none;
-     display: flex;
-     gap: 28px;
- }
+      header nav ul {
+        list-style: none;
+        display: flex;
+        gap: 28px;
+      }
 
- header nav a {
-     text-decoration: none;
-     color: var(--text-main);
-     font-weight: 600;
-     padding: 10px 22px;
-     border-radius: 999px;
-     transition: all 0.35s ease;
- }
+      header nav a {
+        text-decoration: none;
+        color: var(--text-main);
+        font-weight: 600;
+        padding: 10px 22px;
+        border-radius: 999px;
+        transition: all 0.35s ease;
+      }
 
- header nav a:hover {
-     background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
-     color: white;
-     box-shadow: var(--shadow-hover);
- }
+      header nav a:hover {
+        background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+        color: white;
+        box-shadow: var(--shadow-hover);
+      }
 
- header nav a i {
-     margin-right: 8px;
- }
+      header nav a i {
+        margin-right: 8px;
+      }
 
- /* HAMBURGER */
- .hamburger {
-     display: none;
-     flex-direction: column;
-     cursor: pointer;
-     position: absolute;
-     right: 20px;
-     top: 50%;
-     transform: translateY(-50%);
-     z-index: 10;
- }
+      /* HAMBURGER */
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+      }
 
- .hamburger div {
-     width: 25px;
-     height: 3px;
-     background-color: var(--blue-dark);
-     margin: 4px 0;
-     transition: all 0.3s ease;
- }
+      .hamburger div {
+        width: 25px;
+        height: 3px;
+        background-color: var(--blue-dark);
+        margin: 4px 0;
+        transition: all 0.3s ease;
+      }
 
-/* ===============================
+      /* ===============================
    SECTIONS
 ============================== */
-.section {
-    max-width: 1000px;
-    margin: 90px auto;
-    padding: 0 25px;
-}
+      .section {
+        max-width: 1000px;
+        margin: 90px auto;
+        padding: 0 25px;
+      }
 
-.section h2 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-    color: var(--blue-dark);
-}
+      .section h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: var(--blue-dark);
+      }
 
-.notes-list {
-    list-style: none;
-    padding: 0;
-}
+      .notes-list {
+        list-style: none;
+        padding: 0;
+      }
 
-.notes-list li {
-    background: linear-gradient(135deg, white 0%, #f8fafc 50%, var(--blue-soft) 100%);
-    padding: 30px;
-    border-radius: var(--radius);
-    margin-bottom: 20px;
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(59, 130, 246, 0.08);
-    transition: all 0.3s ease;
-    font-size: 1.1em;
-    position: relative;
-    overflow: hidden;
-}
+      .notes-list li {
+        background: linear-gradient(
+          135deg,
+          white 0%,
+          #f8fafc 50%,
+          var(--blue-soft) 100%
+        );
+        padding: 30px;
+        border-radius: var(--radius);
+        margin-bottom: 20px;
+        box-shadow:
+          0 8px 25px rgba(59, 130, 246, 0.1),
+          0 4px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.08);
+        transition: all 0.3s ease;
+        font-size: 1.1em;
+        position: relative;
+        overflow: hidden;
+      }
 
-.notes-list li::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--blue-main), var(--blue-dark));
-    border-radius: var(--radius) var(--radius) 0 0;
-}
+      .notes-list li::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--blue-main), var(--blue-dark));
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
 
-.notes-list li:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1);
-    border-color: rgba(59, 130, 246, 0.2);
-}
+      .notes-list li:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow:
+          0 20px 40px rgba(59, 130, 246, 0.15),
+          0 8px 20px rgba(0, 0, 0, 0.1);
+        border-color: rgba(59, 130, 246, 0.2);
+      }
 
-.notes-list li:hover::before {
-    height: 6px;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-}
+      .notes-list li:hover::before {
+        height: 6px;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+      }
 
-.notes-list a {
-    text-decoration: none;
-    color: var(--text-main);
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
+      .notes-list a {
+        text-decoration: none;
+        color: var(--text-main);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
 
-.notes-list a i {
-    margin-right: 15px;
-    color: var(--blue-main);
-    font-size: 1.2em;
-    transition: all 0.3s ease;
-}
+      .notes-list a i {
+        margin-right: 15px;
+        color: var(--blue-main);
+        font-size: 1.2em;
+        transition: all 0.3s ease;
+      }
 
-.notes-list a:hover i {
-    color: var(--blue-dark);
-    transform: scale(1.1);
-}
+      .notes-list a:hover i {
+        color: var(--blue-dark);
+        transform: scale(1.1);
+      }
 
-.notes-list a:hover {
-    color: var(--blue-dark);
-}
+      .notes-list a:hover {
+        color: var(--blue-dark);
+      }
 
-/* Add download icon for PDF notes */
-.notes-list a[href$=".pdf"]::after {
-    content: '\f1c1';
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    color: #dc2626;
-    margin-left: auto;
-    font-size: 1.1em;
-}
+      /* Add download icon for PDF notes */
+      .notes-list a[href$=".pdf"]::after {
+        content: "\f1c1";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        color: #dc2626;
+        margin-left: auto;
+        font-size: 1.1em;
+      }
 
-/* Enhanced note preview styles */
-.note-preview {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 15px 0;
-    transition: all 0.3s ease;
-}
+      /* Enhanced note preview styles */
+      .note-preview {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 15px 0;
+        transition: all 0.3s ease;
+      }
 
-.note-preview:hover {
-    color: var(--blue-dark) !important;
-}
+      .note-preview:hover {
+        color: var(--blue-dark) !important;
+      }
 
-.note-icon {
-    flex-shrink: 0;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--blue-soft), rgba(59, 130, 246, 0.1));
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 20px;
-    border: 2px solid rgba(59, 130, 246, 0.1);
-    transition: all 0.3s ease;
-}
+      .note-icon {
+        flex-shrink: 0;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(
+          135deg,
+          var(--blue-soft),
+          rgba(59, 130, 246, 0.1)
+        );
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 20px;
+        border: 2px solid rgba(59, 130, 246, 0.1);
+        transition: all 0.3s ease;
+      }
 
-.note-preview:hover .note-icon {
-    background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
-    border-color: var(--blue-main);
-    transform: scale(1.05);
-}
+      .note-preview:hover .note-icon {
+        background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+        border-color: var(--blue-main);
+        transform: scale(1.05);
+      }
 
-.note-preview:hover .note-icon i {
-    color: white !important;
-}
+      .note-preview:hover .note-icon i {
+        color: white !important;
+      }
 
-.note-info {
-    flex: 1;
-    min-width: 0;
-}
+      .note-info {
+        flex: 1;
+        min-width: 0;
+      }
 
-.note-title {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: var(--text-main);
-    transition: color 0.3s ease;
-}
+      .note-title {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-main);
+        transition: color 0.3s ease;
+      }
 
-.note-preview:hover .note-title {
-    color: var(--blue-dark);
-}
+      .note-preview:hover .note-title {
+        color: var(--blue-dark);
+      }
 
-.note-meta {
-    display: flex;
-    gap: 20px;
-    font-size: 0.85em;
-    color: var(--text-muted);
-}
+      .note-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 0.85em;
+        color: var(--text-muted);
+      }
 
-.note-meta span {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+      .note-meta span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
 
-.note-meta i {
-    font-size: 0.8em;
-    opacity: 0.7;
-}
+      .note-meta i {
+        font-size: 0.8em;
+        opacity: 0.7;
+      }
 
-.note-actions {
-    flex-shrink: 0;
-    margin-left: 15px;
-    opacity: 0.6;
-    transition: all 0.3s ease;
-}
+      .note-actions {
+        flex-shrink: 0;
+        margin-left: 15px;
+        opacity: 0.6;
+        transition: all 0.3s ease;
+      }
 
-.note-preview:hover .note-actions {
-    opacity: 1;
-    transform: translateX(5px);
-}
-
-/* Enhanced animations */
-@keyframes noteSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
+      .note-preview:hover .note-actions {
         opacity: 1;
-        transform: translateY(0);
-    }
-}
+        transform: translateX(5px);
+      }
 
-.notes-list li {
-    animation: noteSlideIn 0.6s ease-out forwards;
-}
+      /* Enhanced animations */
+      @keyframes noteSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-.notes-list li:nth-child(1) { animation-delay: 0.1s; }
-.notes-list li:nth-child(2) { animation-delay: 0.2s; }
-.notes-list li:nth-child(3) { animation-delay: 0.3s; }
-.notes-list li:nth-child(4) { animation-delay: 0.4s; }
-.notes-list li:nth-child(5) { animation-delay: 0.5s; }
+      .notes-list li {
+        animation: noteSlideIn 0.6s ease-out forwards;
+      }
 
-/* ===============================
+      .notes-list li:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .notes-list li:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .notes-list li:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .notes-list li:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+      .notes-list li:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+
+      /* ===============================
    FOOTER
 ============================== */
-footer {
-    background: linear-gradient(135deg, var(--blue-dark), var(--blue-main));
-    color: white;
-    text-align: center;
-    padding: 35px 20px;
-}
+      footer {
+        background: linear-gradient(135deg, var(--blue-dark), var(--blue-main));
+        color: white;
+        text-align: center;
+        padding: 35px 20px;
+      }
 
-footer a {
-    color: white;
-    text-decoration: none;
-}
+      footer a {
+        color: white;
+        text-decoration: none;
+      }
 
-/* ===============================
+      /* ===============================
     MOBILE
  ============================== */
-@media (max-width: 768px) {
-    header {
-        padding: 20px;
-        flex-direction: column;
-        gap: 15px;
-    }
+      @media (max-width: 768px) {
+        header {
+          padding: 20px;
+          flex-direction: column;
+          gap: 15px;
+        }
 
-    .logo-text {
-        position: static;
-        transform: none;
-        justify-content: center;
-        margin-bottom: 10px;
-    }
+        .logo-text {
+          position: static;
+          transform: none;
+          justify-content: center;
+          margin-bottom: 10px;
+        }
 
-    header nav {
-        position: static;
-        transform: none;
-        right: auto;
-        display: none;
-        width: 100%;
-    }
+        header nav {
+          position: static;
+          transform: none;
+          right: auto;
+          display: none;
+          width: 100%;
+        }
 
-    header nav.show {
-        display: block;
-    }
+        header nav.show {
+          display: block;
+        }
 
-    header nav ul {
-        flex-direction: column;
-        align-items: center;
-    }
+        header nav ul {
+          flex-direction: column;
+          align-items: center;
+        }
 
-    .hamburger {
-        display: flex;
-    }
+        .hamburger {
+          display: flex;
+        }
 
-    .section {
-        padding: 30px 20px;
-    }
+        .section {
+          padding: 30px 20px;
+        }
 
-    .notes-list li {
-        padding: 25px 20px;
-        margin-bottom: 15px;
-    }
+        .notes-list li {
+          padding: 25px 20px;
+          margin-bottom: 15px;
+        }
 
-    .notes-list a {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
+        .notes-list a {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
 
-    .notes-list a i {
-        margin-right: 0;
-        margin-bottom: 5px;
-    }
+        .notes-list a i {
+          margin-right: 0;
+          margin-bottom: 5px;
+        }
 
-    .note-preview {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
+        .note-preview {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+        }
 
-    .note-icon {
-        width: 45px;
-        height: 45px;
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
+        .note-icon {
+          width: 45px;
+          height: 45px;
+          margin-right: 0;
+          margin-bottom: 10px;
+        }
 
-    .note-meta {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start;
-    }
+        .note-meta {
+          flex-direction: column;
+          gap: 8px;
+          align-items: flex-start;
+        }
 
-    .note-actions {
-        margin-left: 0;
-        margin-top: 10px;
-    }
-}
+        .note-actions {
+          margin-left: 0;
+          margin-top: 10px;
+        }
+      }
 
-/* Prevent printing and downloading */
-@media print {
-    body {
-        display: none !important;
-    }
-    #note-modal {
-        display: none !important;
-    }
-    iframe {
-        display: none !important;
-    }
-}
+      /* Prevent printing and downloading */
+      @media print {
+        body {
+          display: none !important;
+        }
+        #note-modal {
+          display: none !important;
+        }
+        iframe {
+          display: none !important;
+        }
+      }
 
-/* Prevent right-click context menu and unwanted actions in note modal */
-#note-modal {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-</style>
-</head>
-<body>
-
-<header>
-    <div class="logo-text">
+      /* Prevent right-click context menu and unwanted actions in note modal */
+      #note-modal {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo-text">
         <div>
-            <h1>MedMinds MDCAT</h1>
-            <p>Your future begins here</p>
+          <h1>MedMinds MDCAT</h1>
+          <p>Your future begins here</p>
         </div>
-    </div>
+      </div>
 
-    <nav>
+      <nav>
         <ul>
-            <li><a href="home.html"><i class="fas fa-home"></i> Home</a></li>
-            <li><a href="statics.html"><i class="fas fa-chart-bar"></i> Statistics</a></li>
-            <li><a href="quiz.html"><i class="fas fa-brain"></i> Quiz</a></li>
-            <li><a href="Q-Bank.html"><i class="fas fa-book"></i> Q-Bank</a></li>
-            <li><a href="student-notes.html"><i class="fas fa-file-alt"></i> Notes</a></li>
-            <li><a href="MistakeCorner.html"><i class="fas fa-exclamation-triangle"></i> Mistake Corner</a></li>
-            <li><a href="#" onclick="confirmLogout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+          <li>
+            <a href="home.html"><i class="fas fa-home"></i> Home</a>
+          </li>
+          <li>
+            <a href="statics.html"
+              ><i class="fas fa-chart-bar"></i> Statistics</a
+            >
+          </li>
+          <li>
+            <a href="quiz.html"><i class="fas fa-brain"></i> Quiz</a>
+          </li>
+          <li>
+            <a href="Q-Bank.html"><i class="fas fa-book"></i> Q-Bank</a>
+          </li>
+          <li>
+            <a href="student-notes.html"
+              ><i class="fas fa-file-alt"></i> Notes</a
+            >
+          </li>
+          <li>
+            <a href="MistakeCorner.html"
+              ><i class="fas fa-exclamation-triangle"></i> Mistake Corner</a
+            >
+          </li>
+          <li>
+            <a href="#" onclick="confirmLogout()"
+              ><i class="fas fa-sign-out-alt"></i> Logout</a
+            >
+          </li>
         </ul>
-    </nav>
+      </nav>
 
-    <div class="hamburger" onclick="toggleNav()">
+      <div class="hamburger" onclick="toggleNav()">
         <div></div>
         <div></div>
         <div></div>
-    </div>
-</header>
+      </div>
+    </header>
 
-<section class="section">
-    <h2>Biology Notes</h2>
-    <ul class="notes-list" id="biology-notes">
+    <section class="section">
+      <h2>Biology Notes</h2>
+      <ul class="notes-list" id="biology-notes">
         <!-- Notes will be loaded here -->
-    </ul>
-</section>
+      </ul>
+    </section>
 
-<section class="section">
-    <h2>Chemistry Notes</h2>
-    <ul class="notes-list" id="chemistry-notes">
+    <section class="section">
+      <h2>Chemistry Notes</h2>
+      <ul class="notes-list" id="chemistry-notes">
         <!-- Notes will be loaded here -->
-    </ul>
-</section>
+      </ul>
+    </section>
 
-<section class="section">
-    <h2>Physics Notes</h2>
-    <ul class="notes-list" id="physics-notes">
+    <section class="section">
+      <h2>Physics Notes</h2>
+      <ul class="notes-list" id="physics-notes">
         <!-- Notes will be loaded here -->
-    </ul>
-</section>
+      </ul>
+    </section>
 
-<section class="section">
-    <h2>English Notes</h2>
-    <ul class="notes-list" id="english-notes">
+    <section class="section">
+      <h2>English Notes</h2>
+      <ul class="notes-list" id="english-notes">
         <!-- Notes will be loaded here -->
-    </ul>
-</section>
+      </ul>
+    </section>
 
-<section class="section">
-    <h2>Logical Reasoning Notes</h2>
-    <ul class="notes-list" id="logical-reasoning-notes">
+    <section class="section">
+      <h2>Logical Reasoning Notes</h2>
+      <ul class="notes-list" id="logical-reasoning-notes">
         <!-- Notes will be loaded here -->
-    </ul>
-</section>
+      </ul>
+    </section>
 
-<!-- Modal for viewing notes -->
-<div id="note-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;">
-    <div style="position: relative; width: 90%; height: 90%; margin: 5% auto; background: white; border-radius: 8px; overflow: hidden;">
-        <div style="padding: 10px; background: var(--blue-main); color: white; display: flex; justify-content: space-between; align-items: center;">
-            <h3 id="modal-title"></h3>
-            <button onclick="closeModal()" style="background: none; border: none; color: white; font-size: 20px;">&times;</button>
+    <!-- Modal for viewing notes -->
+    <div
+      id="note-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+      "
+    >
+      <div
+        style="
+          position: relative;
+          width: 90%;
+          height: 90%;
+          margin: 5% auto;
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+        "
+      >
+        <div
+          style="
+            padding: 10px;
+            background: var(--blue-main);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h3 id="modal-title"></h3>
+          <button
+            onclick="closeModal()"
+            style="
+              background: none;
+              border: none;
+              color: white;
+              font-size: 20px;
+            "
+          >
+            &times;
+          </button>
         </div>
-        <iframe id="note-embed" src="" width="100%" height="calc(100% - 50px)" style="border: none;" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+        <iframe
+          id="note-embed"
+          src=""
+          width="100%"
+          height="calc(100% - 50px)"
+          style="border: none"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        ></iframe>
+      </div>
     </div>
-</div>
 
-<!-- Custom Alert Modal -->
-<div id="custom-alert-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; backdrop-filter: blur(4px);">
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(145deg, white, var(--blue-soft)); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow-soft); width: 90%; max-width: 400px; text-align: center;">
-        <div style="font-size: 48px; margin-bottom: 20px; color: var(--blue-main);">
-            <i class="fas fa-info-circle"></i>
+    <!-- Custom Alert Modal -->
+    <div
+      id="custom-alert-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        backdrop-filter: blur(4px);
+      "
+    >
+      <div
+        style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: linear-gradient(145deg, white, var(--blue-soft));
+          padding: 30px;
+          border-radius: var(--radius);
+          box-shadow: var(--shadow-soft);
+          width: 90%;
+          max-width: 400px;
+          text-align: center;
+        "
+      >
+        <div
+          style="font-size: 48px; margin-bottom: 20px; color: var(--blue-main)"
+        >
+          <i class="fas fa-info-circle"></i>
         </div>
-        <p id="alert-message" style="margin-bottom: 25px; color: var(--text-main); font-size: 16px; line-height: 1.5;"></p>
-        <button onclick="closeAlertModal()" style="background: linear-gradient(135deg, var(--blue-main), var(--blue-dark)); color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">OK</button>
+        <p
+          id="alert-message"
+          style="
+            margin-bottom: 25px;
+            color: var(--text-main);
+            font-size: 16px;
+            line-height: 1.5;
+          "
+        ></p>
+        <button
+          onclick="closeAlertModal()"
+          style="
+            background: linear-gradient(
+              135deg,
+              var(--blue-main),
+              var(--blue-dark)
+            );
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+          "
+        >
+          OK
+        </button>
+      </div>
     </div>
-</div>
 
-<footer>
-    <p>&copy; 2025 MedMinds MDCAT.</p>
-    <p>
+    <footer>
+      <p>&copy; 2025 MedMinds MDCAT.</p>
+      <p>
         <i class="fas fa-envelope"></i>
         <a href="mailto:admin@medminds.com">admin@medminds.com</a> |
         <i class="fab fa-whatsapp"></i>
-        <a href="https://whatsapp.com/channel/0029VbAO9hc7IUYXO5QyIu1E" target="_blank">MedMinds MDCAT Test Session</a> |
+        <a
+          href="https://whatsapp.com/channel/0029VbAO9hc7IUYXO5QyIu1E"
+          target="_blank"
+          >MedMinds MDCAT Test Session</a
+        >
+        |
         <i class="fab fa-instagram"></i>
-        <a href="https://www.instagram.com/medminds_mdcat/" target="_blank">MedMinds MDCAT</a>
-    </p>
-</footer>
+        <a href="https://www.instagram.com/medminds_mdcat/" target="_blank"
+          >MedMinds MDCAT</a
+        >
+      </p>
+    </footer>
 
-<script>
-function confirmLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        window.location.href = '/logout';
-    }
-}
+    <script>
+      function confirmLogout() {
+        if (confirm("Are you sure you want to logout?")) {
+          window.location.href = "/logout";
+        }
+      }
 
-function toggleNav() {
-    document.querySelector('header nav').classList.toggle('show');
-}
+      function toggleNav() {
+        document.querySelector("header nav").classList.toggle("show");
+      }
 
-// Load notes from server
-async function loadNotes() {
-    try {
-        const response = await fetch('/api/notes');
-        const notes = await response.json();
-        
-        const subjects = ['biology', 'chemistry', 'physics', 'english', 'logical-reasoning'];
-        
-        subjects.forEach(subject => {
+      // Load notes from server
+      async function loadNotes() {
+        try {
+          const response = await fetch("/api/notes");
+          const notes = await response.json();
+
+          const subjects = [
+            "biology",
+            "chemistry",
+            "physics",
+            "english",
+            "logical-reasoning",
+          ];
+
+          subjects.forEach((subject) => {
             const list = document.getElementById(`${subject}-notes`);
-            const subjectNotes = notes.filter(note => note.subject === subject);
-            
+            const subjectNotes = notes.filter(
+              (note) => note.subject === subject,
+            );
+
             if (subjectNotes.length === 0) {
-                list.innerHTML = '<li>No notes available yet.</li>';
+              list.innerHTML = "<li>No notes available yet.</li>";
             } else {
-                list.innerHTML = subjectNotes.map(note =>
+              list.innerHTML = subjectNotes
+                .map(
+                  (note) =>
                     `<li>
                         <a href="#" onclick="viewNote('${note.url}', '${note.title}')" class="note-preview">
                             <div class="note-icon">
@@ -591,46 +761,52 @@ async function loadNotes() {
                                 <i class="fas fa-external-link-alt"></i>
                             </div>
                         </a>
-                    </li>`
-                ).join('');
+                    </li>`,
+                )
+                .join("");
             }
-        });
-    } catch (error) {
-        console.error('Error loading notes:', error);
-        showAlert('Error loading notes. Please try refreshing the page.');
-        // Fallback: show sample notes
-        const subjects = ['biology', 'chemistry', 'physics', 'english', 'logical-reasoning'];
-        subjects.forEach(subject => {
+          });
+        } catch (error) {
+          console.error("Error loading notes:", error);
+          showAlert("Error loading notes. Please try refreshing the page.");
+          // Fallback: show sample notes
+          const subjects = [
+            "biology",
+            "chemistry",
+            "physics",
+            "english",
+            "logical-reasoning",
+          ];
+          subjects.forEach((subject) => {
             const list = document.getElementById(`${subject}-notes`);
-            list.innerHTML = '<li>Notes will be loaded from the server.</li>';
-        });
-    }
-}
+            list.innerHTML = "<li>Notes will be loaded from the server.</li>";
+          });
+        }
+      }
 
-loadNotes();
+      loadNotes();
 
-function viewNote(url, title) {
-    document.getElementById('modal-title').textContent = title;
-    // Use direct PDF URL
-    document.getElementById('note-embed').src = url;
-    document.getElementById('note-modal').style.display = 'block';
-}
+      function viewNote(url, title) {
+        document.getElementById("modal-title").textContent = title;
+        // Use direct PDF URL
+        document.getElementById("note-embed").src = url;
+        document.getElementById("note-modal").style.display = "block";
+      }
 
-function closeModal() {
-    document.getElementById('note-modal').style.display = 'none';
-    document.getElementById('note-embed').src = '';
-}
+      function closeModal() {
+        document.getElementById("note-modal").style.display = "none";
+        document.getElementById("note-embed").src = "";
+      }
 
-// Custom alert functions
-function showAlert(message) {
-    document.getElementById('alert-message').textContent = message;
-    document.getElementById('custom-alert-modal').style.display = 'block';
-}
+      // Custom alert functions
+      function showAlert(message) {
+        document.getElementById("alert-message").textContent = message;
+        document.getElementById("custom-alert-modal").style.display = "block";
+      }
 
-function closeAlertModal() {
-    document.getElementById('custom-alert-modal').style.display = 'none';
-}
-</script>
-
-</body>
+      function closeAlertModal() {
+        document.getElementById("custom-alert-modal").style.display = "none";
+      }
+    </script>
+  </body>
 </html>

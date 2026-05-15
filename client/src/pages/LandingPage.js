@@ -54,7 +54,7 @@ function Home() {
               <a href="/login">Login</a>
             </li>
             <li>
-              <a href="/signup" className="cta">
+              <a href="/register" className="cta">
                 Get Started
               </a>
             </li>
@@ -75,10 +75,10 @@ function Home() {
               progress in one place.
             </p>
             <div className="hero-actions">
-              <a href="signup.html" className="btn-primary">
+              <a href="/register" className="btn-primary">
                 Get started <i className="fa-solid fa-arrow-right" />
               </a>
-              <a href="Login.html" className="btn-outline">
+              <a href="/login" className="btn-outline">
                 Sign in
               </a>
             </div>

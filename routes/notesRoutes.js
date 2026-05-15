@@ -90,4 +90,31 @@ notesRoutes.delete("/note/:id", async (req, res) => {
   }
 });
 
+notesRoutes.get("/note-content/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [note] = await db.execute(
+      "SELECT filename, mimetype FROM notes WHERE id = ?",
+      [id],
+    );
+    if (note.length === 0) {
+      return res.status(404).send("Note not found");
+    }
+    const filePath = path.join(__dirname, "uploads", note[0].filename);
+
+    // Security headers to prevent downloading and printing
+    res.setHeader("Content-Type", note[0].mimetype);
+    res.setHeader("Content-Disposition", "inline");
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Download-Options", "noopen");
+    res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+
+    fs.createReadStream(filePath).pipe(res);
+  } catch (err) {
+    res.status(500).send("Error serving note");
+  }
+});
 export default notesRoutes;

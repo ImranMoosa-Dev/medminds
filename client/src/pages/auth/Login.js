@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "../../utils/AxiosConfig";
 import { useAuth } from "../../context/auth";
 import { toast } from "react-toastify";
@@ -13,7 +13,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
   // handle login
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,8 +25,6 @@ const Login = () => {
           password,
         },
       );
-
-      console.log(data);
       if (data?.success) {
         setAuth({
           ...auth,
@@ -39,9 +36,8 @@ const Login = () => {
         setTimeout(() => {
           setLoading((prev) => ({ ...prev, form: false }));
           toast.success("Welcome Back!");
-          const redirectTo = location.state?.from || "/";
-          navigate(redirectTo);
-        }, 5000);
+          navigate("/quiz-selection");
+        }, 2000);
       }
     } catch (error) {
       console.log(error);

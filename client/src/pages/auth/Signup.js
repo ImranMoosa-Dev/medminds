@@ -1,7 +1,10 @@
 import { useState } from "react";
 import axios from "../../utils/AxiosConfig";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 // import "../scripts/script";
 const Signup = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     fatherName: "",
@@ -26,6 +29,7 @@ const Signup = () => {
       confirmPassword,
     } = formData;
 
+    console.log("formdata", formData);
     if (!fullName) return showAlert("Please enter your first name", "error");
     if (!fatherName) return showAlert("Please enter your last name", "error");
     if (!status) return showAlert("Please enter your status", "error");
@@ -35,7 +39,7 @@ const Signup = () => {
       return showAlert("Please enter your WhatsApp number", "error");
     if (!password) return showAlert("Please enter a password", "error");
     if (password.length < 8)
-      return showAlert(
+      return alert(
         "Password must be at least 8 characters and contain a number.",
         "error",
       );
@@ -61,13 +65,13 @@ const Signup = () => {
         throw new Error(data.error || "Signup failed.");
       }
 
-      showAlert(data.message || "Account created! Await approval.", "success");
+      // toast.success(data.message || "Account created! Await approval.");
       setTimeout(() => {
-        window.location.href = "";
-      }, 1500);
+        navigate(`/account-confirmation/${email}`);
+      }, 1000);
     } catch (e) {
       console.error("Signup error:", e);
-      showAlert(e.message || "Failed to create account", "error");
+      toast.error(e.message || "Failed to create account");
     }
   };
 

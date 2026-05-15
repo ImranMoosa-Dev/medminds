@@ -2,6 +2,7 @@ import axios from "axios";
 
 const instance = axios.create({
   baseURL: process.env.REACT_APP_BASEURL,
+  withCredentials: true,
 });
 
 // REQUEST INTERCEPTOR → Attach Token from localstorage
@@ -25,10 +26,9 @@ instance.interceptors.response.use(
   (response) => response,
   (error) => {
     // if toke expired or unauthorized
-    if (
-      error.response.status === 401 ||
-      error.response.data?.message === "Token expired or invalid"
-    ) {
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
+    if (status === 401 || message === "Token expired or invalid") {
       localStorage.removeItem("auth"); // logout user
       window.location.href = "/"; // redirect to login
     }

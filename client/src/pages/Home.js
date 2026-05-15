@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   function resetPassword() {
@@ -133,9 +134,9 @@ const Home = () => {
               </a>
             </li>
             <li>
-              <a href="student-notes.html">
+              <Link to="/student-notes">
                 <i className="fas fa-file-alt" /> Notes
-              </a>
+              </Link>
             </li>
             <li>
               <a href="MistakeCorner.html">

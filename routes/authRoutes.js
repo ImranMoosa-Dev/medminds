@@ -1,22 +1,35 @@
 import { Router } from "express";
+import { requireSignIn } from "../middleware/authMiddleware.js";
 import {
   signupController,
   loginController,
   forgotPasswordController,
   resetPasswordController,
+  verifyEmailController,
 } from "../controllers/authControllers.js";
 
 const authRoutes = Router();
 
-// Signup route
+// REGISTER ROUTE
 authRoutes.post("/register", signupController);
 
-// Login route
+// LOGIN ROUTE
 authRoutes.post("/login", loginController);
 
-// Forgot password route
+// FORGOT PASSWORD ROUTE
 authRoutes.post("/forgot-password", forgotPasswordController);
 
-// Reset password route
+// RESET PASSWORD ROUTE
 authRoutes.post("/reset-password", resetPasswordController);
+
+// EMAIL VERIFICATION ROUTE FOR STUDENTS
+authRoutes.get("/verify-email/:token", verifyEmailController);
+
+// PROTECTED ROUTE FOR STUDENTS
+authRoutes.get("/me", requireSignIn, (req, res) => {
+  return res
+    .status(200)
+    .send({ ok: true, message: "This is a protected route for students." });
+});
+
 export default authRoutes;

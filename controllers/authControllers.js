@@ -14,7 +14,6 @@ export const signupController = async (req, res) => {
     password,
     confirmPassword,
   } = req.body;
-  console.log("body called:", req.body);
   if (password !== confirmPassword) {
     return res
       .status(400)
@@ -31,9 +30,13 @@ export const signupController = async (req, res) => {
         "Password must be at least 8 characters and contain at least one number and one letter.",
     });
   }
+  // generating email verification token for students
+  const token = Math.random().toString(36).substr(2, 9);
+  const expires = new Date(Date.now() + 3600000); // 1 hour
+
   try {
     await db.execute(
-      "INSERT INTO users (fullName, fatherName, district, whatsapp, status, email, password, loggedIn, approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO users (fullName, fatherName, district, whatsapp, status, email, password, loggedIn, approved, isVerified, verificationToken, verificationTokenExpires) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         fullName,
         fatherName,
@@ -43,12 +46,44 @@ export const signupController = async (req, res) => {
         email,
         password,
         false,
+        true,
         false,
+        token,
+        expires,
       ],
     );
+
+    // sending confirmation email to student
+    // Configure transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      secure: true,
+      auth: {
+        user: process.env.MY_GMAIL,
+        pass: process.env.MY_PASSWORD,
+      },
+    });
+
+    // Compose email
+    const reciever = {
+      from: process.env.MEDMINDS_SERVICE_EMAIL,
+      to: email,
+      subject: "Email Verification",
+      html: `
+        <p>Hello ${fullName},</p>
+        <p>You requested to verify your email. Click below to Verify your email:</p>
+        <a href="${process.env.CLIENT_URL}/verify-email/${token}" 
+          style="background:#0d6efd;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">
+          Verify Email
+        </a>
+        <p>This link will expire in 15 minutes.</p>
+      `,
+    };
+    await transporter.sendMail(reciever);
     return res.status(201).send({
       success: true,
-      message: "Signup successful. Your account is pending admin approval.",
+      message:
+        "Signup successful. Please check your email to verify your account.",
     });
   } catch (err) {
     console.error(err);
@@ -70,23 +105,17 @@ export const loginController = async (req, res) => {
         .send({ success: false, error: "Invalid credentials" });
     }
     const user = rows[0];
+    if (!user.isVerified) {
+      return res.status(403).send({
+        success: false,
+        error: "Please verify your email before logging in.",
+      });
+    }
 
     if (user.password !== password) {
       return res
         .status(400)
         .send({ success: false, error: "Invalid credentials" });
-    }
-
-    if (
-      user.email !== "biologia.info1@gmail.com" &&
-      user.email !== "admin@medminds.com"
-    ) {
-      if (!user.approved) {
-        return res.status(400).send({
-          success: false,
-          error: "Your account is pending admin approval.",
-        });
-      }
     }
 
     await db.execute("UPDATE users SET loggedIn=? WHERE email=?", [
@@ -97,6 +126,7 @@ export const loginController = async (req, res) => {
     req.session.user = user.email;
 
     const tokenPayload = {
+      id: user.id,
       email: user.email,
       role:
         user.email === "biologia.info1@gmail.com" ||
@@ -126,26 +156,6 @@ export const loginController = async (req, res) => {
     } catch (err) {
       console.error("Error recording login date:", err);
     }
-    const role =
-      user.email === "biologia.info1@gmail.com" ||
-      user.email === "admin@medminds.com"
-        ? "admin"
-        : "student";
-
-    let redirectUrl = "/home";
-
-    if (role === "admin") {
-      redirectUrl = "/admin";
-    }
-
-    if (returnUrl && returnUrl.startsWith("/")) {
-      redirectUrl = returnUrl;
-    }
-
-    // Use returnUrl if provided and valid
-    if (returnUrl && returnUrl.startsWith("/")) {
-      redirectUrl = returnUrl;
-    }
 
     return res.status(200).send({
       success: true,
@@ -159,10 +169,8 @@ export const loginController = async (req, res) => {
         whatsappNumber: user.whatsapp,
         status: user.status,
         email: user.email,
-        approved: Boolean(user.approved),
-        role,
+        role: tokenPayload.role,
       },
-      redirect: redirectUrl,
     });
   } catch (err) {
     console.error(err);
@@ -265,5 +273,44 @@ export const resetPasswordController = async (req, res) => {
   } catch (err) {
     console.error("Reset password error:", err);
     res.status(500).send("Error resetting password");
+  }
+};
+
+// Email verification controller for students
+export const verifyEmailController = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT * FROM users 
+       WHERE verificationToken = ? 
+       AND verificationTokenExpires > NOW()`,
+      [token],
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid or expired verification link",
+      });
+    }
+
+    const user = rows[0];
+
+    await db.execute(
+      `UPDATE users 
+       SET isVerified = TRUE,
+           verificationToken = NULL,
+           verificationTokenExpires = NULL
+       WHERE id = ?`,
+      [user.id],
+    );
+
+    res.json({
+      message: "Email verified successfully!",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Server error",
+    });
   }
 };

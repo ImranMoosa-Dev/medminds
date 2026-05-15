@@ -3,21 +3,6 @@ import { createQuizController } from "../controllers/quizControllers.js";
 
 const quizRoutes = Router();
 
-// get quiz
-quizRoutes.get("/quiz.html", (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/dashboard.html");
-  }
-  res.sendFile(path.join(__dirname, "quiz.html"));
-});
-
-// get single quiz
-quizRoutes.get("/quiz/:id", (req, res) => {
-  // Allow access to quiz page even if not logged in for shared links
-  // Access control will be handled by the API
-  res.sendFile(path.join(__dirname, "quiz.html"));
-});
-
 quizRoutes.delete("/delete-quiz/:qid", async (req, res) => {
   if (
     req.session.user === "biologia.info1@gmail.com" ||
