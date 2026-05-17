@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import "../styles/quiz-details.css";
+import axios from "../utils/AxiosConfig";
 
 export default function QuizDetails() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [quiz, setQuiz] = useState(null);
   const [customAttempt, setCustomAttempt] = useState(null);
@@ -14,8 +16,28 @@ export default function QuizDetails() {
 
   const isCustom = searchParams.get("custom") === "1";
   const attemptId = searchParams.get("attempt_id");
-  const quizId = searchParams.get("quiz_id");
+  const { quizId } = useParams();
 
+  const loadQuiz = async () => {
+    setLoading(true);
+    if (!quizId) return;
+    try {
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_BASEURL}/api/v1/quizzes/quiz/${quizId}`,
+      );
+      if (data?.success) {
+        setQuiz(data.quiz);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.log(error.message);
+      setError("Quiz not found.");
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadQuiz();
+  }, []);
   //   useEffect(() => {
   //     const init = async () => {
   //       try {
@@ -360,8 +382,8 @@ function QuizView({
   onStart,
   onBack,
 }) {
-  const publishedDate = quiz.scheduled_date
-    ? new Date(quiz.scheduled_date).toLocaleDateString("en-US", {
+  const publishedDate = quiz?.created_at
+    ? new Date(quiz.created_at).toLocaleDateString("en-US", {
         weekday: "long",
         year: "numeric",
         month: "long",
@@ -384,23 +406,25 @@ function QuizView({
         backHref="/quiz-selection"
       />
       <Card>
-        <div className="quiz-title">{quiz.name}</div>
+        <div className="quiz-title">{quiz?.name}</div>
         <div className="quiz-subtitle">
-          Quiz #{quiz.quiz_order} · {publishedDate}
+          Quiz #{quiz?.quiz_order} · {publishedDate}
         </div>
         <div className="tag-row">
           <span
-            className={quiz.is_published ? "tag tag-green" : "tag tag-orange"}
+            className={quiz?.is_published ? "tag tag-green" : "tag tag-orange"}
           >
-            {quiz.is_published ? "✅ Published" : "⏳ Draft"}
+            {quiz?.is_published ? "✅ Published" : "⏳ Draft"}
           </span>
-          {quiz.type && <span className="tag tag-blue">📋 {quiz.type}</span>}
-          {quiz.syllabus && (
-            <span className="tag tag-purple">📚 {quiz.syllabus}</span>
+          {quiz?.testType && (
+            <span className="tag tag-blue">📋 {quiz?.testType}</span>
           )}
-          <span className={quiz.batch_id ? "tag tag-orange" : "tag tag-green"}>
+          {/* {quiz.syllabus && (
+            <span className="tag tag-purple">📚 {quiz.syllabus}</span>
+          )} */}
+          {/* <span className={quiz.batch_id ? "tag tag-orange" : "tag tag-green"}>
             {quiz.batch_id ? "🔒 Batch Restricted" : "🌐 Open to All"}
-          </span>
+          </span> */}
         </div>
         <div className="details-grid">
           <div className="detail-item">
@@ -420,21 +444,20 @@ function QuizView({
                   color: "var(--text-secondary)",
                 }}
               >
-                {" "}
-                min
+                {/* MAIN */}
               </span>
             </div>
           </div>
           <div className="detail-item">
             <div className="detail-label">📋 Type</div>
-            <div className="detail-value sm">{quiz.type || "—"}</div>
+            <div className="detail-value sm">{quiz?.testType || "—"}</div>
           </div>
           <div className="detail-item">
             <div className="detail-label">📚 Syllabus</div>
-            <div className="detail-value sm">{quiz.syllabus || "—"}</div>
+            {/* <div className="detail-value sm">{quiz.syllabus || "—"}</div> */}
           </div>
         </div>
-        {quiz.description && (
+        {quiz?.description && (
           <div className="info-box blue">
             <strong>📖 Description</strong>
             <p>{quiz.description}</p>
@@ -447,7 +470,7 @@ function QuizView({
           </div>
         )}
         <div className="cta-row">
-          {!quiz.is_published ? (
+          {!quiz?.is_published ? (
             <button className="btn-start" disabled>
               ⏳ Not Yet Published
             </button>
@@ -553,56 +576,4 @@ function LoadingSpinner() {
       }}
     />
   );
-}
-
-const styles = `
-  :root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --text-primary: #1a1a1a;
-    --text-secondary: #666666;
-    --border-color: #e0e0e0;
-  }
-  [data-theme="dark"] {
-    --bg-primary: #1a1a1a;
-    --bg-secondary: #2d2d2d;
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --border-color: #404040;
-  }
-  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-secondary); color: var(--text-primary); }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .tag { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-  .tag-blue { background: #e3f2fd; color: #0b63b7; }
-  .tag-purple { background: #f3e5f5; color: #7b1fa2; }
-  .tag-green { background: #e8f5e9; color: #2e7d32; }
-  .tag-orange { background: #fff3e0; color: #e65100; }
-  .quiz-title { font-size: 22px; font-weight: 700; color: #0b63b7; margin-bottom: 6px; }
-  .quiz-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid var(--border-color); }
-  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
-  .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .detail-item { padding: 16px; background: var(--bg-secondary); border-radius: 10px; border-left: 4px solid #0b63b7; }
-  .detail-label { font-size: 11px; font-weight: 700; color: #0b63b7; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
-  .detail-value { font-size: 20px; font-weight: 700; color: var(--text-primary); }
-  .detail-value.sm { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
-  .info-box { padding: 16px; border-radius: 10px; margin-bottom: 16px; border-left: 4px solid; }
-  .info-box.blue { background: #e3f2fd; border-color: #0b63b7; }
-  .info-box.green { background: #e8f5e9; border-color: #2e7d32; }
-  .info-box.orange { background: #fff3e0; border-color: #e65100; }
-  .info-box strong { font-size: 13px; font-weight: 700; }
-  .info-box p { margin-top: 6px; font-size: 13px; color: var(--text-secondary); }
-  .cta-row { display: flex; gap: 12px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
-  .btn-start { padding: 14px 36px; background: linear-gradient(135deg, #0b63b7, #0a4a8f); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(11,99,183,0.3); }
-  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(11,99,183,0.4); }
-  .btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-  .btn-back-2 { padding: 14px 28px; background: var(--bg-secondary); color: #0b63b7; border: 2px solid var(--border-color); border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
-  .btn-back-2:hover { border-color: #0b63b7; }
-  .back-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  @media (max-width: 600px) { header { padding: 18px; } header h1 { font-size: 20px; } .card { padding: 20px; } .details-grid { grid-template-columns: 1fr 1fr; } }
-`;
-
-if (typeof document !== "undefined") {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = styles;
-  document.head.appendChild(styleSheet);
 }

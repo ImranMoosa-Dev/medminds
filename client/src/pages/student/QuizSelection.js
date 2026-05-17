@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import "../../styles/quiz-selection.css";
 import StudentLayout from "../../components/layout/StudentLayout";
+import axios from "../../utils/AxiosConfig";
 
 const SUBJ_COLORS = {
   Biology: { bg: "#dcfce7", color: "#16a34a" },
@@ -15,7 +16,6 @@ const SUBJ_COLORS = {
 const QuizSelection = () => {
   const navigate = useNavigate();
   const [auth] = useAuth();
-  const [theme, setTheme] = useState("light");
   const [welcomeName, setWelcomeName] = useState("");
   const [allQuizzes, setAllQuizzes] = useState([]);
   const [completionMap, setCompletionMap] = useState({});
@@ -28,184 +28,93 @@ const QuizSelection = () => {
   const [stats, setStats] = useState({ completed: "—", total: "—", avg: "—" });
   const [progressPct, setProgressPct] = useState(0);
 
-  // Password reset modal
-  const [pwModalOpen, setPwModalOpen] = useState(false);
-  const [pwNew, setPwNew] = useState("");
-  const [pwConfirm, setPwConfirm] = useState("");
-  const [pwAlert, setPwAlert] = useState({
-    show: false,
-    msg: "",
-    type: "error",
-  });
-  const [pwBtnDisabled, setPwBtnDisabled] = useState(false);
-  const [pwBtnText, setPwBtnText] = useState("Update Password");
-  const pwNewRef = useRef(null);
-
+  // load quizzes on mount
   useEffect(() => {
-    document.title = "Quiz Selection – MedMinds";
-    // Theme init
-    const saved = localStorage.getItem("medminds-theme");
-    const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const t = saved || (dark ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", t);
-    setTheme(t);
+    setWelcomeName(auth.user ? auth.user.fullName || auth.user.email : "");
 
-    // Password recovery detection
-    // const { data: authListener } = supabase.auth.onAuthStateChange(
-    //   (event, session) => {
-    //     if (event === "PASSWORD_RECOVERY") {
-    //       window.history.replaceState(null, "", window.location.pathname);
-    //       setPwModalOpen(true);
-    //       setTimeout(() => pwNewRef.current?.focus(), 150);
-    //     }
-    //   },
-    // );
-
-    // const hashParams = new URLSearchParams(
-    //   window.location.hash.replace("#", ""),
-    // );
-    // if (hashParams.get("type") === "recovery") {
-    //   setTimeout(() => {
-    //     setPwModalOpen(true);
-    //     setTimeout(() => pwNewRef.current?.focus(), 100);
-    //   }, 300);
-    // }
-
-    // initializeQuizSelection();
-
-    // return () => {
-    //   authListener?.subscription?.unsubscribe();
-    // };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadQuizzes();
   }, []);
 
-  //   const logout = async () => {
-  //     try {
-  //       await supabase.auth.signOut();
-  //     } catch (_) {}
-  //     navigate("/");
-  //   };
+  // load quizzes
+  const loadQuizzes = async () => {
+    try {
+      setLoading(true);
 
-  // ══════════════════════════════════════════════════
-  // INIT
-  // ══════════════════════════════════════════════════
-  //   const initializeQuizSelection = async () => {
-  //     try {
-  //       const {
-  //         data: { user },
-  //       } = await supabase.auth.getUser();
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_BASEURL}/api/v1/quizzes`,
+      );
 
-  //       if (!user) {
-  //         showUnauthenticated();
-  //         return;
-  //       }
-  //       setCurrentUser(user);
-  //       await Promise.all([loadUserInfo(user), loadQuizzes(user)]);
-  //     } catch (e) {
-  //       console.error("Init error:", e);
-  //       setLoading(false);
-  //     }
-  //   };
+      setAllQuizzes(data.quizzes || []);
+      setLoading(false);
+    } catch (e) {
+      console.error("loadQuizzes error:", e);
+      setAllQuizzes([]);
+      setLoading(false);
+    }
+  };
 
-  //   const showUnauthenticated = async () => {
-  //     setUnauthenticated(true);
+  // const loadQuizzes = async (user) => {
+  //   try {
+  //     const { data: userRows } = await supabase
+  //       .from("users")
+  //       .select("batch_id")
+  //       .eq("id", user.id);
+  //     const batchId = userRows?.[0]?.batch_id || null;
+
+  //     const { data: allQ, error: qErr } = await supabase
+  //       .from("quizzes")
+  //       .select("*")
+  //       .eq("is_published", true)
+  //       .order("quiz_order", { ascending: true });
+  //     if (qErr) throw qErr;
+
+  //     const { data: jRows } = await supabase
+  //       .from("quiz_batches")
+  //       .select("quiz_id, batch_id");
+
+  //     const quizBatchMap = {};
+  //     (jRows || []).forEach((r) => {
+  //       if (!quizBatchMap[r.quiz_id]) quizBatchMap[r.quiz_id] = new Set();
+  //       quizBatchMap[r.quiz_id].add(String(r.batch_id));
+  //     });
+
+  //     const quizzes = (allQ || []).filter((quiz) => {
+  //       const jBatches = quizBatchMap[quiz.id];
+  //       const hasJRows = jBatches && jBatches.size > 0;
+  //       const legacyBatch = quiz.batch_id ? String(quiz.batch_id) : null;
+  //       if (!hasJRows && !legacyBatch) return true;
+  //       if (!batchId) return false;
+  //       if (hasJRows) return jBatches.has(String(batchId));
+  //       return legacyBatch === String(batchId);
+  //     });
+
+  //     const { data: attempts, error: aErr } = await supabase
+  //       .from("quiz_attempts")
+  //       .select("quiz_id, score, total")
+  //       .eq("user_id", user.id);
+  //     if (aErr) console.warn("Attempts fetch error:", aErr);
+
+  //     const completedIds = new Set((attempts || []).map((a) => a.quiz_id));
+  //     const cMap = {};
+  //     (attempts || []).forEach((a) => {
+  //       cMap[a.quiz_id] = a;
+  //     });
+
+  //     const quizzesWithStatus = (quizzes || []).map((q) => ({
+  //       ...q,
+  //       status: completedIds.has(q.id) ? "COMPLETED" : "AVAILABLE",
+  //     }));
+
+  //     setAllQuizzes(quizzesWithStatus);
+  //     setCompletionMap(cMap);
+  //     updateProgress(quizzesWithStatus, cMap);
   //     setLoading(false);
-  //     setWelcomeName("Guest");
-  //     try {
-  //       const { data: quizzes } = await supabase
-  //         .from("quizzes")
-  //         .select("*")
-  //         .eq("is_published", true)
-  //         .order("quiz_order", { ascending: true });
-  //       setPreviewQuizzes(quizzes || []);
-  //     } catch (_) {
-  //       setPreviewQuizzes([]);
-  //     }
-  //   };
-
-  //   const loadUserInfo = async (user) => {
-  //     try {
-  //       const { data: rows } = await supabase
-  //         .from("users")
-  //         .select("first_name, last_name, email")
-  //         .eq("id", user.id);
-  //       const data = rows?.[0];
-  //       if (data) {
-  //         const name =
-  //           [data.first_name, data.last_name].filter(Boolean).join(" ") ||
-  //           data.email ||
-  //           "Student";
-  //         setWelcomeName(name);
-  //       } else {
-  //         setWelcomeName(user.email || "Student");
-  //       }
-  //     } catch (e) {
-  //       setWelcomeName("Student");
-  //     }
-  //   };
-
-  //   const loadQuizzes = async (user) => {
-  //     try {
-  //       const { data: userRows } = await supabase
-  //         .from("users")
-  //         .select("batch_id")
-  //         .eq("id", user.id);
-  //       const batchId = userRows?.[0]?.batch_id || null;
-
-  //       const { data: allQ, error: qErr } = await supabase
-  //         .from("quizzes")
-  //         .select("*")
-  //         .eq("is_published", true)
-  //         .order("quiz_order", { ascending: true });
-  //       if (qErr) throw qErr;
-
-  //       const { data: jRows } = await supabase
-  //         .from("quiz_batches")
-  //         .select("quiz_id, batch_id");
-
-  //       const quizBatchMap = {};
-  //       (jRows || []).forEach((r) => {
-  //         if (!quizBatchMap[r.quiz_id]) quizBatchMap[r.quiz_id] = new Set();
-  //         quizBatchMap[r.quiz_id].add(String(r.batch_id));
-  //       });
-
-  //       const quizzes = (allQ || []).filter((quiz) => {
-  //         const jBatches = quizBatchMap[quiz.id];
-  //         const hasJRows = jBatches && jBatches.size > 0;
-  //         const legacyBatch = quiz.batch_id ? String(quiz.batch_id) : null;
-  //         if (!hasJRows && !legacyBatch) return true;
-  //         if (!batchId) return false;
-  //         if (hasJRows) return jBatches.has(String(batchId));
-  //         return legacyBatch === String(batchId);
-  //       });
-
-  //       const { data: attempts, error: aErr } = await supabase
-  //         .from("quiz_attempts")
-  //         .select("quiz_id, score, total")
-  //         .eq("user_id", user.id);
-  //       if (aErr) console.warn("Attempts fetch error:", aErr);
-
-  //       const completedIds = new Set((attempts || []).map((a) => a.quiz_id));
-  //       const cMap = {};
-  //       (attempts || []).forEach((a) => {
-  //         cMap[a.quiz_id] = a;
-  //       });
-
-  //       const quizzesWithStatus = (quizzes || []).map((q) => ({
-  //         ...q,
-  //         status: completedIds.has(q.id) ? "COMPLETED" : "AVAILABLE",
-  //       }));
-
-  //       setAllQuizzes(quizzesWithStatus);
-  //       setCompletionMap(cMap);
-  //       updateProgress(quizzesWithStatus, cMap);
-  //       setLoading(false);
-  //     } catch (e) {
-  //       console.error("loadQuizzes error:", e);
-  //       setAllQuizzes([]);
-  //       setLoading(false);
-  //     }
-  //   };
+  //   } catch (e) {
+  //     console.error("loadQuizzes error:", e);
+  //     setAllQuizzes([]);
+  //     setLoading(false);
+  //   }
+  // };
 
   const updateProgress = (quizzes, cMap) => {
     const completed = quizzes.filter((q) => q.status === "COMPLETED").length;
@@ -254,8 +163,7 @@ const QuizSelection = () => {
   };
 
   const startQuiz = (quizId) => {
-    localStorage.setItem("selectedQuizId", quizId);
-    navigate("/quiz");
+    navigate(`/quiz-details/${quizId}`);
   };
 
   const reviewQuiz = (quizId) => {
@@ -263,45 +171,11 @@ const QuizSelection = () => {
     navigate("/review");
   };
 
-  // ── Password reset ──
-  const showPwAlert = (msg, type = "error") => {
-    setPwAlert({ show: true, msg, type });
-  };
-
-  //   const updatePassword = async () => {
-  //     if (!pwNew || pwNew.length < 6) {
-  //       showPwAlert("Password kam az kam 6 characters ka hona chahiye.");
-  //       return;
-  //     }
-  //     if (pwNew !== pwConfirm) {
-  //       showPwAlert("Passwords match nahi kar rahe!");
-  //       return;
-  //     }
-
-  //     setPwBtnDisabled(true);
-  //     setPwBtnText("Updating…");
-
-  //     try {
-  //       const { error } = await supabase.auth.updateUser({ password: pwNew });
-  //       if (error) throw error;
-
-  //       showPwAlert("✅ Password update ho gaya! Logging in...", "success");
-  //       setTimeout(() => {
-  //         setPwModalOpen(false);
-  //         window.location.reload();
-  //       }, 1800);
-  //     } catch (e) {
-  //       console.error("updatePassword error:", e);
-  //       showPwAlert(e.message || "Password update failed. Please try again.");
-  //       setPwBtnDisabled(false);
-  //       setPwBtnText("Update Password");
-  //     }
-  //   };
-
   // ── Render ──
   const displayQuizzes =
     filteredQuizzes !== null ? filteredQuizzes : allQuizzes;
 
+  // render quize cards
   const renderQuizCard = (quiz) => {
     const comp = completionMap[quiz.id];
     const pct =
@@ -546,219 +420,6 @@ const QuizSelection = () => {
           )}
         </div>
       </StudentLayout>
-
-      {/* ============================================================ */}
-      {/* PASSWORD RESET MODAL (shown when user arrives via reset link) */}
-      {/* ============================================================ */}
-      <div
-        id="pwResetOverlay"
-        style={{
-          display: pwModalOpen ? "flex" : "none",
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.6)",
-          zIndex: 99999,
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 20,
-          backdropFilter: "blur(4px)",
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: 36,
-            width: "100%",
-            maxWidth: 420,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-            position: "relative",
-          }}
-        >
-          {/* Lock icon */}
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              background: "linear-gradient(135deg,#0b63b7,#0a4a8f)",
-              borderRadius: 16,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-              fontSize: 28,
-            }}
-          >
-            🔐
-          </div>
-
-          <h2
-            style={{
-              fontFamily: "'Merriweather',serif",
-              fontSize: 20,
-              fontWeight: 700,
-              color: "#0b63b7",
-              textAlign: "center",
-              marginBottom: 6,
-            }}
-          >
-            Set New Password
-          </h2>
-          <p
-            style={{
-              fontSize: 13,
-              color: "#666",
-              textAlign: "center",
-              marginBottom: 24,
-              lineHeight: 1.5,
-            }}
-          >
-            Aapka account verify ho gaya!
-            <br />
-            Naya password set karein.
-          </p>
-
-          <div
-            id="pwResetAlert"
-            style={{
-              display: pwAlert.show ? "block" : "none",
-              padding: "12px 14px",
-              borderRadius: 8,
-              fontSize: 13,
-              marginBottom: 16,
-              background: pwAlert.type === "error" ? "#fee2e2" : "#dcfce7",
-              color: pwAlert.type === "error" ? "#7f1d1d" : "#14532d",
-              borderLeft:
-                pwAlert.type === "error"
-                  ? "4px solid #dc2626"
-                  : "4px solid #16a34a",
-            }}
-          >
-            {pwAlert.msg}
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: 12,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                color: "#444",
-                marginBottom: 8,
-              }}
-            >
-              New Password
-            </label>
-            <input
-              type="password"
-              id="pwNew"
-              ref={pwNewRef}
-              placeholder="••••••••"
-              minLength="6"
-              value={pwNew}
-              onChange={(e) => setPwNew(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                border: "1.5px solid #e0e0e0",
-                borderRadius: 10,
-                fontSize: 14,
-                fontFamily: "inherit",
-                outline: "none",
-                transition: "border-color 0.2s",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0b63b7";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e0e0e0";
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: 24 }}>
-            <label
-              style={{
-                display: "block",
-                fontSize: 12,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-                color: "#444",
-                marginBottom: 8,
-              }}
-            >
-              Confirm New Password
-            </label>
-            <input
-              type="password"
-              id="pwConfirm"
-              placeholder="••••••••"
-              minLength="6"
-              value={pwConfirm}
-              onChange={(e) => setPwConfirm(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                border: "1.5px solid #e0e0e0",
-                borderRadius: 10,
-                fontSize: 14,
-                fontFamily: "inherit",
-                outline: "none",
-                transition: "border-color 0.2s",
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "#0b63b7";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e0e0e0";
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter");
-              }}
-            />
-          </div>
-
-          <button
-            id="pwUpdateBtn"
-            disabled={pwBtnDisabled}
-            style={{
-              width: "100%",
-              padding: 14,
-              background: "linear-gradient(135deg,#0b63b7,#0a4a8f)",
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              fontSize: 15,
-              fontWeight: 700,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(11,99,183,0.3)",
-              transition: "opacity 0.2s,transform 0.1s",
-            }}
-            onMouseOver={(e) => {
-              e.target.style.opacity = "0.9";
-            }}
-            onMouseOut={(e) => {
-              e.target.style.opacity = "1";
-            }}
-          >
-            {pwBtnText}
-          </button>
-
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: 12,
-              color: "#999",
-              marginTop: 16,
-            }}
-          >
-            🔒 After updating, you'll be logged in automatically.
-          </p>
-        </div>
-      </div>
     </>
   );
 };

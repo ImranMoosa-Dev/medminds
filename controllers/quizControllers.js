@@ -1,3 +1,52 @@
+import db from "../config/MedMindsDB.js";
+
+// GET ALL QUIZZES
+export const getAllQuizzesController = async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT *
+      FROM quizzes
+      WHERE is_published = 1
+      ORDER BY quiz_order ASC
+    `);
+
+    res.status(200).send({
+      success: true,
+      message: "Quizzes fetched successfully",
+      quizzes: rows,
+    });
+  } catch (error) {
+    console.error("getAllQuizzes error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Error fetching quizzes",
+    });
+  }
+};
+
+// GET SINGLE QUIZ BY ID CONTROLLER
+export const getQuizByIdController = async (req, res) => {
+  const { qId } = req.params;
+  try {
+    const [rows] = await db.execute(`
+      SELECT *
+      FROM quizzes
+      WHERE id = ${qId}
+    `);
+
+    res.status(200).send({
+      success: true,
+      message: "Quiz fetched successfully",
+      quiz: rows,
+    });
+  } catch (error) {
+    console.error("get Single Quiz error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Error fetching Single quiz",
+    });
+  }
+};
 export const createQuizController = async (req, res) => {
   if (req.session.user) {
     let {

@@ -1,10 +1,54 @@
-import React from "react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/auth";
 import "../styles/header.css";
 const Header = () => {
+  const [auth, setAuth] = useAuth();
+  const [theme, setTheme] = useState("light");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Load saved theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("medminds-theme") || "light";
+
+    setTheme(savedTheme);
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }, []);
+  // Update theme whenever state changes
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("medminds-theme", theme);
+  }, [theme]);
+
+  // Toggle theme
+  const handleThemeToggle = () => {
+    setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
+  };
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen((prev) => !prev);
+  };
+
+  // Close menu after clicking a link
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  // handle logout
+  const handleLogout = () => {
+    if (window.confirm("Are you sure? want to logout!")) {
+      closeMobileMenu();
+      localStorage.clear();
+      setAuth({ user: null, token: null });
+      navigate("/login");
+    }
+  };
   return (
     <header className="site-header">
       <div className="header-inner">
-        <a href="quiz-selection" className="brand">
+        <Link to="/quiz-selection" className="brand">
           <svg
             className="brand-logo"
             viewBox="0 0 120 100"
@@ -86,37 +130,71 @@ const Header = () => {
             <circle cx={78} cy={54} r="2.5" fill="#0a4a8f" />
           </svg>
           <span className="brand-name">MedMinds</span>
-        </a>
+        </Link>
         <div className="header-right">
           <nav className="nav-links">
-            <a href="quiz-selection">🏠 Dashboard</a>
-            <a href="create-test">🧪 Create Test</a>
-            <a href="custom-history">Quiz History</a>
-            <a href="stats">📊 My Stats</a>
-            <a href="leaderboard">🏆 Leaderboard</a>
-            <a href="my-batch">My Batch</a>
-            <a href="profile">👤 Profile</a>
+            <Link to="/quiz-selection">🏠 Dashboard</Link>
+            <Link to="/create-test">🧪 Create Test</Link>
+            <Link to="/custom-history">📜 Quiz History</Link>
+            <Link to="/stats">📊 My Stats</Link>
+            <Link to="/leaderboard">🏆 Leaderboard</Link>
+            <Link to="/my-batch">👥 My Batch</Link>
+            <Link to="/profile">👤 Profile</Link>
           </nav>
-          <button className="theme-btn" id="themeBtn" title="Toggle theme">
-            🌙
+          <button
+            className="theme-btn"
+            id="themeBtn"
+            title="Toggle theme"
+            onClick={handleThemeToggle}
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
           </button>
-          <button className="logout-btn-hdr">Logout</button>
-          <button className="hamburger" id="hamburger" aria-label="Menu">
+          {/* Desktop Logout */}
+
+          <button className="logout-btn-hdr" onClick={handleLogout}>
+            Logout
+          </button>
+          {/* Hamburger */}
+          <button
+            className={`hamburger ${mobileMenuOpen ? "open" : ""}`}
+            onClick={toggleMobileMenu}
+            id="hamburger"
+            aria-label="Menu"
+            aria-expanded={mobileMenuOpen}
+          >
             <span />
             <span />
             <span />
           </button>
         </div>
       </div>
-      <nav className="mobile-nav" id="mobileNav">
-        <a href="quiz-selection.html">🏠 Dashboard</a>
-        <a href="create-test.html">🧪 Create Test</a>
-        <a href="custom-history.html">Quiz History</a>
-        <a href="stats.html">📊 My Stats</a>
-        <a href="leaderboard.html">🏆 Leaderboard</a>
-        <a href="my-batch.html">My Batch</a>
-        <a href="profile.html">👤 Profile</a>
-        <button className="mobile-nav-logout">🚪 Logout</button>
+      {/* Mobile Navigation */}
+      <nav className={`mobile-nav ${mobileMenuOpen ? "open" : ""}`}>
+        <Link to="/quiz-selection" onClick={closeMobileMenu}>
+          🏠 Dashboard
+        </Link>
+        <Link to="/create-test" onClick={closeMobileMenu}>
+          🧪 Create Test
+        </Link>
+        <Link to="/custom-history" onClick={closeMobileMenu}>
+          📜 Quiz History
+        </Link>
+        <Link to="/stats" onClick={closeMobileMenu}>
+          📊 My Stats
+        </Link>
+        <Link to="/leaderboard" onClick={closeMobileMenu}>
+          🏆 Leaderboard
+        </Link>
+        <Link to="/my-batch" onClick={closeMobileMenu}>
+          👥 My Batch
+        </Link>
+        <Link to="/profile" onClick={closeMobileMenu}>
+          👤 Profile
+        </Link>
+
+        <button className="mobile-nav-logout" onClick={handleLogout}>
+          🚪 Logout
+        </button>
       </nav>
     </header>
   );

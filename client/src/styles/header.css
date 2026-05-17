@@ -5,7 +5,7 @@
     var(--blue-main) 0%,
     var(--blue-mid) 60%,
     var(--blue-dark) 100%
-  );
+  ) !important;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -127,7 +127,7 @@
 .mobile-nav.open {
   display: flex;
 }
-.mobile-nav a {
+.mobile-nav {
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
   font-size: 14px;
@@ -149,4 +149,121 @@
   text-align: left;
   cursor: pointer;
   font-family: "DM Sans", sans-serif;
+}
+
+/* header.css */
+/* ✅ Changes Made:
+   1. Added responsive media query for mobile.
+   2. Hide desktop nav + logout on screens <= 992px.
+   3. Show hamburger on mobile.
+   4. Mobile nav slides down.
+   5. Theme button remains visible.
+*/
+
+/* Existing CSS remains same above this point */
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .header-inner {
+    padding: 0 16px;
+    height: 60px;
+  }
+
+  .brand-name {
+    font-size: 18px;
+  }
+
+  /* Hide desktop navigation */
+  .nav-links,
+  .logout-btn-hdr {
+    display: none;
+  }
+
+  /* Show hamburger */
+  .hamburger {
+    display: flex;
+  }
+
+  /* Mobile menu */
+  .mobile-nav {
+    display: none;
+    flex-direction: column;
+    background: var(--blue-dark);
+    width: 100%;
+    animation: slideDown 0.3s ease;
+  }
+
+  .mobile-nav.open {
+    display: flex;
+  }
+
+  .mobile-nav a,
+  .mobile-nav-logout {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 14px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background 0.2s;
+    font-family: "DM Sans", sans-serif;
+  }
+  /* Reset button styles */
+  .mobile-nav-logout {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  /* Hover effect same as links */
+  .mobile-nav a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .theme-btn {
+    padding: 7px 9px;
+  }
+}
+
+/* Ensure mobile menu always hides on larger screens */
+@media (min-width: 769px) {
+  .mobile-nav,
+  .mobile-nav.open {
+    display: none !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+  .header-inner {
+    padding: 0 12px;
+  }
+
+  .brand-name {
+    font-size: 16px;
+  }
+
+  .theme-btn {
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+
+  .hamburger span {
+    width: 20px;
+  }
+}
+
+/* Slide animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

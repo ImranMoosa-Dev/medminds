@@ -1,8 +1,20 @@
 import { Router } from "express";
-import { createQuizController } from "../controllers/quizControllers.js";
+import {
+  createQuizController,
+  getAllQuizzesController,
+  getQuizByIdController,
+} from "../controllers/quizControllers.js";
+import { get } from "mongoose";
 
 const quizRoutes = Router();
 
+// get all quizzes
+quizRoutes.get("/", getAllQuizzesController);
+
+// get single quiz by id
+quizRoutes.get("/quiz/:qId", getQuizByIdController);
+
+// quiz deletion
 quizRoutes.delete("/delete-quiz/:qid", async (req, res) => {
   if (
     req.session.user === "biologia.info1@gmail.com" ||

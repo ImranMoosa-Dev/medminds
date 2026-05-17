@@ -1,4 +1,4 @@
-:root {
+/* :root {
   --blue-dark: #072f6b;
   --blue-mid: #0a4a8f;
   --blue-main: #0b63b7;
@@ -46,7 +46,7 @@ body {
   transition:
     background 0.3s,
     color 0.3s;
-}
+} */
 
 /* ── HEADER ── */
 .site-header {

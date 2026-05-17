@@ -9,15 +9,23 @@ import jwt from "jsonwebtoken";
 import authRoutes from "./routes/authRoutes.js";
 import initDB from "./database/initDB.js";
 import studentRoutes from "./routes/studentRoutes.js";
+import quizRoutes from "./routes/quizRoutes.js";
+
 // import adminRoutes from "./routes/adminRoutes.js";
 // import questionRoutes from "./routes/questionRoutes.js";
 // import notesRoutes from "./routes/notesRoutes.js";
+
+// seeding files imports
+// import seedSubjects from "./database/seedSubject.js";
+// import seedTopics from "./database/seedTopics.js";
+// import seedSubtopics from "./database/seedSubTopics.js";
+// import seedQuestions from "./database/seedQuestions.js";
+// import seedQuizzes from "./database/seedQuizzes.js";
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
 // Initialize the database and create tables if they don't exist
-initDB();
-
+await initDB();
 // config dotenv
 dotenv.config();
 // // ================================
@@ -54,6 +62,7 @@ app.use(
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/student", studentRoutes);
+app.use("/api/v1/quizzes", quizRoutes);
 // app.use("/api/v1/admin", adminRoutes);
 // app.use("/api/v1/question", questionRoutes);
 // app.use("/api/v1/notes", notesRoutes);
@@ -111,8 +120,6 @@ app.listen(PORT, () => {
 //     adminEmails: ADMIN_EMAILS,
 //   });
 // });
-
-
 
 //   // Ensure admin users exist
 //   const adminEmails = ["biologia.info1@gmail.com", "admin@medminds.com"];
@@ -510,9 +517,6 @@ app.listen(PORT, () => {
 //     const i = Math.floor(Math.log(bytes) / Math.log(k));
 //     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 //   }
-
-
-
 
 //   app.get("/api/approved-students", async (req, res) => {
 //     if (

@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
+import { useAuth } from "../../context/auth";
+import StudentLayout from "../../components/layout/StudentLayout";
 import "../../styles/create-test.css";
 
 const CreateTest = () => {
   const navigate = useNavigate();
   const [auth] = useAuth();
 
-  const [theme, setTheme] = useState("light");
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-
   // Wizard state
   const [currentStep, setCurrentStep] = useState(1);
-  const [pageLoading, setPageLoading] = useState(true);
-  const [showStepper, setShowStepper] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [showStepper, setShowStepper] = useState(true);
   const [showTrialBanner, setShowTrialBanner] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
   const [alertMsg, setAlertMsg] = useState("");
@@ -49,79 +47,57 @@ const CreateTest = () => {
   // Create button state
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    document.title = "Create Custom Test – MedMinds";
-    // Theme init
-    const saved = localStorage.getItem("medminds-theme");
-    const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const t = saved || (dark ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", t);
-    setTheme(t);
+  // const init = async () => {
+  //   try {
+  //     const { data: authData } = await supabase.auth.getUser();
+  //     const user = authData?.user;
+  //     if (!user) {
+  //       navigate("/");
+  //       return;
+  //     }
+  //     currentUserRef.current = user;
 
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  //     const { data: profile } = await supabase
+  //       .from("users")
+  //       .select("*")
+  //       .eq("id", user.id)
+  //       .single();
 
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    localStorage.setItem("medminds-theme", next);
-    setTheme(next);
-  };
+  //     const adminEmails = ["admin@medminds.com", "service.medminds@gmail.com"];
+  //     let _isBatchUser = false;
+  //     let _isTrialUser = false;
+  //     let _trialUsed = false;
+  //     if (adminEmails.includes(user.email)) {
+  //       _isBatchUser = true;
+  //     } else if (profile?.batch_id) {
+  //       _isBatchUser = true;
+  //     } else {
+  //       _isTrialUser = true;
+  //       const { count } = await supabase
+  //         .from("custom_test_attempts")
+  //         .select("id", { count: "exact", head: true })
+  //         .eq("user_id", user.id);
+  //       _trialUsed = (count || 0) > 0;
+  //     }
 
-  const toggleMobileNav = () => setMobileNavOpen((o) => !o);
+  //     setIsTrialUser(_isTrialUser);
+  //     setPageLoading(false);
 
-  const init = async () => {
-    try {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (!user) {
-        navigate("/");
-        return;
-      }
-      currentUserRef.current = user;
+  //     if (_isTrialUser && _trialUsed) {
+  //       setShowBlocked(true);
+  //       return;
+  //     }
 
-      const { data: profile } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+  //     if (_isTrialUser) setShowTrialBanner(true);
 
-      const adminEmails = ["admin@medminds.com", "service.medminds@gmail.com"];
-      let _isBatchUser = false;
-      let _isTrialUser = false;
-      let _trialUsed = false;
-      if (adminEmails.includes(user.email)) {
-        _isBatchUser = true;
-      } else if (profile?.batch_id) {
-        _isBatchUser = true;
-      } else {
-        _isTrialUser = true;
-        const { count } = await supabase
-          .from("custom_test_attempts")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id);
-        _trialUsed = (count || 0) > 0;
-      }
-
-      setIsTrialUser(_isTrialUser);
-      setPageLoading(false);
-
-      if (_isTrialUser && _trialUsed) {
-        setShowBlocked(true);
-        return;
-      }
-
-      if (_isTrialUser) setShowTrialBanner(true);
-
-      setShowStepper(true);
-      await loadSubjectsStep();
-    } catch (e) {
-      console.error("Init error:", e);
-      setPageLoading(false);
-      setAlertMsg("Error loading page. Please refresh.");
-    }
-  };
+  //     setShowStepper(true);
+  //     await loadSubjectsStep();
+  //   } catch (e) {
+  //     console.error("Init error:", e);
+  //     setPageLoading(false);
+  //     setAlertMsg("Error loading page. Please refresh.");
+  //   }
+  // };
 
   // ── Step navigation ──
   const goStep = async (n) => {
@@ -139,42 +115,42 @@ const CreateTest = () => {
         return;
       }
     }
-    if (n === 2) await loadTopicsStep();
-    if (n === 3) await loadSubtopicsStep();
-    if (n === 4) await loadMcqStep();
+    // if (n === 2) await loadTopicsStep();
+    // if (n === 3) await loadSubtopicsStep();
+    // if (n === 4) await loadMcqStep();
     setCurrentStep(n);
     setAlertMsg("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // ── Step 1: Subjects ──
-  const loadSubjectsStep = async () => {
-    setLoadingSubjects(true);
-    setErrorMsg((e) => ({ ...e, subjects: "" }));
-    try {
-      const { data: subjects } = await supabase
-        .from("subjects")
-        .select("*")
-        .order("name");
-      const { data: qBySubj } = await supabase
-        .from("questions")
-        .select("subject")
-        .not("subject", "is", null);
-      const countMap = {};
-      (qBySubj || []).forEach((q) => {
-        countMap[q.subject] = (countMap[q.subject] || 0) + 1;
-      });
-      const subjectsWithCount = (subjects || []).map((s) => ({
-        ...s,
-        q_count: countMap[s.name] || 0,
-      }));
-      setAllSubjects(subjectsWithCount);
-    } catch (e) {
-      setErrorMsg((er) => ({ ...er, subjects: e.message }));
-    } finally {
-      setLoadingSubjects(false);
-    }
-  };
+  // const loadSubjectsStep = async () => {
+  //   setLoadingSubjects(true);
+  //   setErrorMsg((e) => ({ ...e, subjects: "" }));
+  //   try {
+  //     const { data: subjects } = await supabase
+  //       .from("subjects")
+  //       .select("*")
+  //       .order("name");
+  //     const { data: qBySubj } = await supabase
+  //       .from("questions")
+  //       .select("subject")
+  //       .not("subject", "is", null);
+  //     const countMap = {};
+  //     (qBySubj || []).forEach((q) => {
+  //       countMap[q.subject] = (countMap[q.subject] || 0) + 1;
+  //     });
+  //     const subjectsWithCount = (subjects || []).map((s) => ({
+  //       ...s,
+  //       q_count: countMap[s.name] || 0,
+  //     }));
+  //     setAllSubjects(subjectsWithCount);
+  //   } catch (e) {
+  //     setErrorMsg((er) => ({ ...er, subjects: e.message }));
+  //   } finally {
+  //     setLoadingSubjects(false);
+  //   }
+  // };
 
   const onSubjectToggle = (id) => {
     const numId = Number(id);
@@ -198,38 +174,38 @@ const CreateTest = () => {
   };
 
   // ── Step 2: Topics ──
-  const loadTopicsStep = async () => {
-    setLoadingTopics(true);
-    setErrorMsg((e) => ({ ...e, topics: "" }));
-    setSelectedTopics(new Set());
-    try {
-      const selSubjIds = [...selectedSubjects];
-      const selSubjNames = allSubjects
-        .filter((s) => selSubjIds.includes(s.id))
-        .map((s) => s.name);
-      const { data: topics } = await supabase
-        .from("topics")
-        .select("*")
-        .in("subject_name", selSubjNames)
-        .order("name");
-      const { data: qByTopic } = await supabase
-        .from("questions")
-        .select("topic")
-        .in("subject", selSubjNames)
-        .not("topic", "is", null);
-      const countMap = {};
-      (qByTopic || []).forEach((q) => {
-        countMap[q.topic] = (countMap[q.topic] || 0) + 1;
-      });
-      setAllTopics(
-        (topics || []).map((t) => ({ ...t, q_count: countMap[t.name] || 0 })),
-      );
-    } catch (e) {
-      setErrorMsg((er) => ({ ...er, topics: e.message }));
-    } finally {
-      setLoadingTopics(false);
-    }
-  };
+  // const loadTopicsStep = async () => {
+  //   setLoadingTopics(true);
+  //   setErrorMsg((e) => ({ ...e, topics: "" }));
+  //   setSelectedTopics(new Set());
+  //   try {
+  //     const selSubjIds = [...selectedSubjects];
+  //     const selSubjNames = allSubjects
+  //       .filter((s) => selSubjIds.includes(s.id))
+  //       .map((s) => s.name);
+  //     const { data: topics } = await supabase
+  //       .from("topics")
+  //       .select("*")
+  //       .in("subject_name", selSubjNames)
+  //       .order("name");
+  //     const { data: qByTopic } = await supabase
+  //       .from("questions")
+  //       .select("topic")
+  //       .in("subject", selSubjNames)
+  //       .not("topic", "is", null);
+  //     const countMap = {};
+  //     (qByTopic || []).forEach((q) => {
+  //       countMap[q.topic] = (countMap[q.topic] || 0) + 1;
+  //     });
+  //     setAllTopics(
+  //       (topics || []).map((t) => ({ ...t, q_count: countMap[t.name] || 0 })),
+  //     );
+  //   } catch (e) {
+  //     setErrorMsg((er) => ({ ...er, topics: e.message }));
+  //   } finally {
+  //     setLoadingTopics(false);
+  //   }
+  // };
 
   const onTopicToggle = (id) => {
     const numId = Number(id);
@@ -251,60 +227,60 @@ const CreateTest = () => {
   };
 
   // ── Step 3: Subtopics ──
-  const loadSubtopicsStep = async () => {
-    setLoadingSubtopics(true);
-    setErrorMsg((e) => ({ ...e, subtopics: "" }));
-    setSelectedSubtopics(new Set());
-    try {
-      const selTopicIds = [...selectedTopics];
-      const selTopicNames = allTopics
-        .filter((t) => selTopicIds.includes(t.id))
-        .map((t) => t.name);
-      const { data: subtopics } = await supabase
-        .from("subtopics")
-        .select("*")
-        .in("topic_name", selTopicNames)
-        .order("name");
-      const { data: qBySub } = await supabase
-        .from("questions")
-        .select("subtopic")
-        .in("topic", selTopicNames)
-        .not("subtopic", "is", null);
-      const countMap = {};
-      (qBySub || []).forEach((q) => {
-        countMap[q.subtopic] = (countMap[q.subtopic] || 0) + 1;
-      });
+  // const loadSubtopicsStep = async () => {
+  //   setLoadingSubtopics(true);
+  //   setErrorMsg((e) => ({ ...e, subtopics: "" }));
+  //   setSelectedSubtopics(new Set());
+  //   try {
+  //     const selTopicIds = [...selectedTopics];
+  //     const selTopicNames = allTopics
+  //       .filter((t) => selTopicIds.includes(t.id))
+  //       .map((t) => t.name);
+  //     const { data: subtopics } = await supabase
+  //       .from("subtopics")
+  //       .select("*")
+  //       .in("topic_name", selTopicNames)
+  //       .order("name");
+  //     const { data: qBySub } = await supabase
+  //       .from("questions")
+  //       .select("subtopic")
+  //       .in("topic", selTopicNames)
+  //       .not("subtopic", "is", null);
+  //     const countMap = {};
+  //     (qBySub || []).forEach((q) => {
+  //       countMap[q.subtopic] = (countMap[q.subtopic] || 0) + 1;
+  //     });
 
-      let solvedMap = {};
-      try {
-        const { data: myAttempts } = await supabase
-          .from("custom_test_attempts")
-          .select("answers, questions_json")
-          .eq("user_id", currentUserRef.current.id);
-        (myAttempts || []).forEach((attempt) => {
-          const answers = attempt.answers || {};
-          const questions = attempt.questions_json || [];
-          Object.keys(answers).forEach((idx) => {
-            const q = questions[parseInt(idx)];
-            if (q?.subtopic)
-              solvedMap[q.subtopic] = (solvedMap[q.subtopic] || 0) + 1;
-          });
-        });
-      } catch (_) {}
+  //     let solvedMap = {};
+  //     try {
+  //       const { data: myAttempts } = await supabase
+  //         .from("custom_test_attempts")
+  //         .select("answers, questions_json")
+  //         .eq("user_id", currentUserRef.current.id);
+  //       (myAttempts || []).forEach((attempt) => {
+  //         const answers = attempt.answers || {};
+  //         const questions = attempt.questions_json || [];
+  //         Object.keys(answers).forEach((idx) => {
+  //           const q = questions[parseInt(idx)];
+  //           if (q?.subtopic)
+  //             solvedMap[q.subtopic] = (solvedMap[q.subtopic] || 0) + 1;
+  //         });
+  //       });
+  //     } catch (_) {}
 
-      setAllSubtopics(
-        (subtopics || []).map((st) => ({
-          ...st,
-          q_count: countMap[st.name] || 0,
-          solved_count: solvedMap[st.name] || 0,
-        })),
-      );
-    } catch (e) {
-      setErrorMsg((er) => ({ ...er, subtopics: e.message }));
-    } finally {
-      setLoadingSubtopics(false);
-    }
-  };
+  //     setAllSubtopics(
+  //       (subtopics || []).map((st) => ({
+  //         ...st,
+  //         q_count: countMap[st.name] || 0,
+  //         solved_count: solvedMap[st.name] || 0,
+  //       })),
+  //     );
+  //   } catch (e) {
+  //     setErrorMsg((er) => ({ ...er, subtopics: e.message }));
+  //   } finally {
+  //     setLoadingSubtopics(false);
+  //   }
+  // };
 
   const onSubtopicToggle = (id) => {
     const numId = Number(id);
@@ -326,31 +302,31 @@ const CreateTest = () => {
   };
 
   // ── Step 4: MCQ count ──
-  const loadMcqStep = async () => {
-    const selSubIds = [...selectedSubtopics];
-    const selSubNames = allSubtopics
-      .filter((st) => selSubIds.includes(Number(st.id)))
-      .map((st) => st.name);
-    let _maxAvailable = 0;
-    try {
-      const { count } = await supabase
-        .from("questions")
-        .select("id", { count: "exact", head: true })
-        .in("subtopic", selSubNames);
-      _maxAvailable = count || 0;
-    } catch (_) {
-      _maxAvailable = allSubtopics
-        .filter((st) => selSubIds.includes(st.id))
-        .reduce((s, st) => s + st.q_count, 0);
-    }
-    setMaxAvailable(_maxAvailable);
-    let _sliderMax = isTrialUser
-      ? Math.min(_maxAvailable, trialMax)
-      : Math.min(_maxAvailable, 200);
-    if (_sliderMax < 5) _sliderMax = 5;
-    setSliderMax(_sliderMax);
-    setMcqCount(Math.min(30, _sliderMax));
-  };
+  // const loadMcqStep = async () => {
+  //   const selSubIds = [...selectedSubtopics];
+  //   const selSubNames = allSubtopics
+  //     .filter((st) => selSubIds.includes(Number(st.id)))
+  //     .map((st) => st.name);
+  //   let _maxAvailable = 0;
+  //   try {
+  //     const { count } = await supabase
+  //       .from("questions")
+  //       .select("id", { count: "exact", head: true })
+  //       .in("subtopic", selSubNames);
+  //     _maxAvailable = count || 0;
+  //   } catch (_) {
+  //     _maxAvailable = allSubtopics
+  //       .filter((st) => selSubIds.includes(st.id))
+  //       .reduce((s, st) => s + st.q_count, 0);
+  //   }
+  //   setMaxAvailable(_maxAvailable);
+  //   let _sliderMax = isTrialUser
+  //     ? Math.min(_maxAvailable, trialMax)
+  //     : Math.min(_maxAvailable, 200);
+  //   if (_sliderMax < 5) _sliderMax = 5;
+  //   setSliderMax(_sliderMax);
+  //   setMcqCount(Math.min(30, _sliderMax));
+  // };
 
   const updateMcqSlider = (val) => {
     setMcqCount(parseInt(val));
@@ -364,80 +340,80 @@ const CreateTest = () => {
   };
 
   // ── Step 5: Confirm/Create ──
-  const createAndStart = async () => {
-    setCreating(true);
-    try {
-      const selSubNames = allSubtopics
-        .filter((st) => selectedSubtopics.has(st.id))
-        .map((st) => st.name);
-      const { data: pool, error } = await supabase
-        .from("questions")
-        .select("*")
-        .in("subtopic", selSubNames);
-      if (error) throw error;
-      if (!pool || pool.length === 0)
-        throw new Error("No questions found for selected subtopics.");
+  // const createAndStart = async () => {
+  //   setCreating(true);
+  //   try {
+  //     const selSubNames = allSubtopics
+  //       .filter((st) => selectedSubtopics.has(st.id))
+  //       .map((st) => st.name);
+  //     const { data: pool, error } = await supabase
+  //       .from("questions")
+  //       .select("*")
+  //       .in("subtopic", selSubNames);
+  //     if (error) throw error;
+  //     if (!pool || pool.length === 0)
+  //       throw new Error("No questions found for selected subtopics.");
 
-      const shuffled = [...pool];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      const selected = shuffled.slice(0, mcqCount);
+  //     const shuffled = [...pool];
+  //     for (let i = shuffled.length - 1; i > 0; i--) {
+  //       const j = Math.floor(Math.random() * (i + 1));
+  //       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  //     }
+  //     const selected = shuffled.slice(0, mcqCount);
 
-      const selSubjNames = allSubjects
-        .filter((s) => selectedSubjects.has(s.id))
-        .map((s) => s.name);
-      const selTopicNames = allTopics
-        .filter((t) => selectedTopics.has(t.id))
-        .map((t) => t.name);
-      const mins = mcqCount;
-      const h = Math.floor(mins / 60);
-      const m = mins % 60;
-      const durText = h > 0 ? `${h}h ${m}min` : `${m} min`;
+  //     const selSubjNames = allSubjects
+  //       .filter((s) => selectedSubjects.has(s.id))
+  //       .map((s) => s.name);
+  //     const selTopicNames = allTopics
+  //       .filter((t) => selectedTopics.has(t.id))
+  //       .map((t) => t.name);
+  //     const mins = mcqCount;
+  //     const h = Math.floor(mins / 60);
+  //     const m = mins % 60;
+  //     const durText = h > 0 ? `${h}h ${m}min` : `${m} min`;
 
-      const meta = {
-        subjects: selSubjNames,
-        topics: selTopicNames,
-        subtopics: selSubNames,
-        mcq_count: mcqCount,
-        duration_seconds: mcqCount * 60,
-        duration_text: durText,
-        is_custom: true,
-        created_at: new Date().toISOString(),
-      };
+  //     const meta = {
+  //       subjects: selSubjNames,
+  //       topics: selTopicNames,
+  //       subtopics: selSubNames,
+  //       mcq_count: mcqCount,
+  //       duration_seconds: mcqCount * 60,
+  //       duration_text: durText,
+  //       is_custom: true,
+  //       created_at: new Date().toISOString(),
+  //     };
 
-      const { data: attemptRow, error: aErr } = await supabase
-        .from("custom_test_attempts")
-        .insert({
-          user_id: currentUserRef.current.id,
-          questions_json: selected,
-          answers: null,
-          score: null,
-          total: mcqCount,
-          subjects: selSubjNames,
-          topics: selTopicNames,
-          subtopics: selSubNames,
-          duration_seconds: meta.duration_seconds,
-          status: "pending",
-        })
-        .select()
-        .single();
-      if (aErr) throw aErr;
+  //     const { data: attemptRow, error: aErr } = await supabase
+  //       .from("custom_test_attempts")
+  //       .insert({
+  //         user_id: currentUserRef.current.id,
+  //         questions_json: selected,
+  //         answers: null,
+  //         score: null,
+  //         total: mcqCount,
+  //         subjects: selSubjNames,
+  //         topics: selTopicNames,
+  //         subtopics: selSubNames,
+  //         duration_seconds: meta.duration_seconds,
+  //         status: "pending",
+  //       })
+  //       .select()
+  //       .single();
+  //     if (aErr) throw aErr;
 
-      localStorage.setItem("customTestMeta", JSON.stringify(meta));
-      localStorage.setItem("customTestAttemptId", attemptRow.id);
-      localStorage.setItem("questions", JSON.stringify(selected));
-      localStorage.setItem("isCustomTest", "1");
-      localStorage.removeItem("selectedQuizId");
+  //     localStorage.setItem("customTestMeta", JSON.stringify(meta));
+  //     localStorage.setItem("customTestAttemptId", attemptRow.id);
+  //     localStorage.setItem("questions", JSON.stringify(selected));
+  //     localStorage.setItem("isCustomTest", "1");
+  //     localStorage.removeItem("selectedQuizId");
 
-      navigate(`/quiz-details?custom=1&attempt_id=${attemptRow.id}`);
-    } catch (e) {
-      console.error("createAndStart error:", e);
-      showAlert("Error creating test: " + e.message);
-      setCreating(false);
-    }
-  };
+  //     navigate(`/quiz-details?custom=1&attempt_id=${attemptRow.id}`);
+  //   } catch (e) {
+  //     console.error("createAndStart error:", e);
+  //     showAlert("Error creating test: " + e.message);
+  //     setCreating(false);
+  //   }
+  // };
 
   const showAlert = (msg) => setAlertMsg(msg);
 
@@ -493,70 +469,7 @@ const CreateTest = () => {
 
   return (
     <>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=DM+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
-
-      {/* ══ HEADER ══ */}
-      <header className="site-header">
-        <div className="header-inner">
-          <a href="/quiz-selection" className="brand">
-            <img
-              src="logo.jpeg"
-              className="brand-logo"
-              alt="MedMinds"
-              onError={(e) => {
-                e.target.style.display = "none";
-              }}
-            />
-            <span className="brand-name">MedMinds</span>
-          </a>
-          <nav className="nav-links">
-            <a href="/quiz-selection">🏠 Dashboard</a>
-            <a href="/create-test">🧪 Create Test</a>
-            <a href="/custom-history">Quiz History</a>
-            <a href="/stats">📊 My Stats</a>
-            <a href="/leaderboard">🏆 Leaderboard</a>
-            <a href="/my-batch">My Batch</a>
-            <a href="/profile">👤 Profile</a>
-          </nav>
-          <div className="header-right">
-            <button className="theme-btn" id="themeBtn" onClick={toggleTheme}>
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-            <button className="logout-btn-hdr" onClick={logout}>
-              Logout
-            </button>
-            <button
-              className={`hamburger ${mobileNavOpen ? "open" : ""}`}
-              id="hamburger"
-              onClick={toggleMobileNav}
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-          </div>
-        </div>
-        <nav
-          className={`mobile-nav ${mobileNavOpen ? "open" : ""}`}
-          id="mobileNav"
-        >
-          <a href="/quiz-selection">🏠 Dashboard</a>
-          <a href="/create-test">🧪 Create Test</a>
-          <a href="/custom-history">Quiz History</a>
-          <a href="/stats">📊 My Stats</a>
-          <a href="/leaderboard">🏆 Leaderboard</a>
-          <a href="/my-batch">My Batch</a>
-          <a href="/profile">👤 Profile</a>
-          <button className="mobile-nav-logout" onClick={logout}>
-            🚪 Logout
-          </button>
-        </nav>
-      </header>
-
-      <main id="mainContent">
+      <StudentLayout id="mainContent">
         {pageLoading && (
           <div id="pageLoader" className="loading-state">
             <div className="load-spinner"></div>
@@ -1173,7 +1086,6 @@ const CreateTest = () => {
               </button>
               <button
                 className="btn btn-success"
-                onClick={createAndStart}
                 id="btnCreate"
                 disabled={creating}
               >
@@ -1188,7 +1100,7 @@ const CreateTest = () => {
             </div>
           </div>
         )}
-      </main>
+      </StudentLayout>
     </>
   );
 };

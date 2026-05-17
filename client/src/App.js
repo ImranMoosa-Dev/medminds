@@ -6,15 +6,17 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AccountConfirmation from "./pages/auth/AccountConfirmation";
 import VerifyEmail from "./pages/auth/VerifyEmail";
-import Review from "./pages/student/Review";
 
-// private routes
+// student private routes imports
 import StudentPrivateRoute from "./components/Routes/StudentPrivateRoute";
-// student pages imports
 import QuizSelection from "./pages/student/QuizSelection";
 import Profile from "./pages/student/Profile";
 import Stats from "./pages/student/Stats";
 import CustomHistory from "./pages/student/CustomHistory";
+import CreateTest from "./pages/student/CreateTest";
+import Quiz from "./pages/student/Quiz";
+import Review from "./pages/student/Review";
+import QuizDetails from "./pages/QuizDetails";
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
         <Route path="/quiz-selection" element={<QuizSelection />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/custom-history" element={<CustomHistory />} />
+        <Route path="/create-test" element={<CreateTest />} />
+        <Route path="/quiz-details/:quizId" element={<QuizDetails />} />
       </Route>
 
       {/* test route */}
