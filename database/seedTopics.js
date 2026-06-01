@@ -53,10 +53,10 @@ const seedTopics = async () => {
         continue;
       }
 
-      await db.execute(
-        `INSERT INTO topics (subject_id, subject_name, name) VALUES (?, ?, ?)`,
-        [subject_id, subject_name, name],
-      );
+      await db.execute(`INSERT INTO topics (subject_id, name) VALUES (?, ?)`, [
+        subject_id,
+        name,
+      ]);
     }
 
     console.log("✅ Topics seeded successfully");

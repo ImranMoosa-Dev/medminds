@@ -35,24 +35,35 @@ export const getTopics = async (req, res) => {
 // =========================
 export const getTopicsBySubject = async (req, res) => {
   try {
-    const { subject_id } = req.params;
+    const { selectedSubjectIds } = req.body;
+
+    // Validate input
+    if (!Array.isArray(selectedSubjectIds) || selectedSubjectIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "selectedSubjectIds must be a non-empty array",
+      });
+    }
+    // Create placeholders (?, ?, ?, ...)
+    const placeholders = selectedSubjectIds.map(() => "?").join(",");
 
     const [rows] = await db.execute(
       `
-      SELECT * FROM topics
-      WHERE subject_id = ?
-      ORDER BY id DESC
+      SELECT *
+      FROM topics
+      WHERE subject_id IN (${placeholders})
+      ORDER BY subject_id ASC, id DESC
       `,
-      [subject_id],
+      selectedSubjectIds,
     );
-
-    res.status(200).json({
+    return res.status(200).send({
       success: true,
-      data: rows,
+      message: "Topics By Subject fetches successfully",
+      topics: rows,
     });
   } catch (error) {
     console.error("Get Topics By Subject Error:", error);
-    res.status(500).json({
+    res.status(500).send({
       success: false,
       message: "Failed to fetch topics",
     });

@@ -16,7 +16,10 @@ import CustomHistory from "./pages/student/CustomHistory";
 import CreateTest from "./pages/student/CreateTest";
 import Quiz from "./pages/student/Quiz";
 import Review from "./pages/student/Review";
-import QuizDetails from "./pages/QuizDetails";
+import QuizDetails from "./pages/student/QuizDetails";
+import Result from "./pages/student/Result";
+import MyBatch from "./pages/student/MyBatch";
+import Leaderboard from "./pages/student/Leaderboard";
 
 function App() {
   return (
@@ -38,7 +41,11 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/custom-history" element={<CustomHistory />} />
         <Route path="/create-test" element={<CreateTest />} />
-        <Route path="/quiz-details/:quizId" element={<QuizDetails />} />
+        <Route path="/quiz-details" element={<QuizDetails />} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/result" element={<Result />} />
+        <Route path="/my-batch" element={<MyBatch />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
       </Route>
 
       {/* test route */}

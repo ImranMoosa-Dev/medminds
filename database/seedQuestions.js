@@ -17,6 +17,9 @@ const seedQuestions = async () => {
     const [subtopics] = await db.execute(
       "SELECT id, name, topic_id FROM subtopics",
     );
+    const [quizzes] = await db.execute(
+      "SELECT id, name, subject_id, topic_id FROM quizzes",
+    );
 
     // =========================
     // Helper Functions
@@ -46,6 +49,13 @@ const seedQuestions = async () => {
           s.topic_id === topicId,
       );
       return subtopic ? subtopic.id : null;
+    };
+
+    const getQuizId = (subjectId, topicId) => {
+      const quiz = quizzes.find(
+        (q) => q.subject_id === subjectId && q.topic_id === topicId,
+      );
+      return quiz ? quiz.id : null;
     };
 
     // =========================
@@ -92,6 +102,7 @@ const seedQuestions = async () => {
         subject_id: biologyId,
         topic_id: introBioTopicId,
         subtopic_id: branchesSubtopicId,
+        quiz_id: getQuizId(biologyId, introBioTopicId),
         question: "Botany is the branch of biology that deals with:",
         opt1: "Animals",
         opt2: "Plants",
@@ -104,6 +115,7 @@ const seedQuestions = async () => {
         subject_id: chemistryId,
         topic_id: atomicStructureTopicId,
         subtopic_id: isotopesSubtopicId,
+        quiz_id: getQuizId(chemistryId, atomicStructureTopicId),
         question:
           "Atoms of the same element having different mass numbers are called:",
         opt1: "Ions",
@@ -118,6 +130,7 @@ const seedQuestions = async () => {
         subject_id: physicsId,
         topic_id: motionTopicId,
         subtopic_id: newtonSubtopicId,
+        quiz_id: getQuizId(physicsId, motionTopicId),
         question: "Newton's First Law is also known as:",
         opt1: "Law of Gravitation",
         opt2: "Law of Inertia",
@@ -140,9 +153,18 @@ const seedQuestions = async () => {
         continue;
       }
 
+      if (!q.quiz_id) {
+        console.log(
+          "❌ Skipping question due to missing quiz match:",
+          q.question,
+        );
+        continue;
+      }
+
       await db.execute(
         `
         INSERT INTO questions (
+          quiz_id,
           subject_id,
           topic_id,
           subtopic_id,
@@ -156,11 +178,12 @@ const seedQuestions = async () => {
           image,
           is_published
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
+          q.quiz_id,
           q.subject_id,
-          q.topic_id, // ✅ Correct order
+          q.topic_id,
           q.subtopic_id || null,
           q.question,
           q.opt1,

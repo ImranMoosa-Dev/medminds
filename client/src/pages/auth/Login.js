@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "../../utils/AxiosConfig";
 import { useAuth } from "../../context/auth";
 import { toast } from "react-toastify";
+import { userLogin } from "../../api/authApi";
 import "../../styles/style.css";
 
 const Login = () => {
@@ -18,13 +19,8 @@ const Login = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_BASEURL}/api/v1/auth/login`,
-        {
-          email,
-          password,
-        },
-      );
+      // User Login API
+      const data = await userLogin(email, password);
       if (data?.success) {
         setAuth({
           ...auth,

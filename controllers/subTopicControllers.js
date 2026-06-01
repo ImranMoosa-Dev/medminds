@@ -33,24 +33,35 @@ export const getSubtopics = async (req, res) => {
 };
 
 // =========================
-// GET SUBTOPICS BY TOPIC
+// GET SUBTOPICS BY TOPIC ID
 // =========================
 export const getSubtopicsByTopic = async (req, res) => {
   try {
-    const { topic_id } = req.params;
+    const { selectedTopicIds } = req.body;
+
+    // Validate input
+    if (!Array.isArray(selectedTopicIds) || selectedTopicIds.length === 0) {
+      return res.status(400).send({
+        success: false,
+        message: "selected Topics ids must be a non-empty array",
+      });
+    }
+    // Create placeholders (?, ?, ?, ...)
+    const placeholders = selectedTopicIds.map(() => "?").join(",");
 
     const [rows] = await db.execute(
       `
       SELECT * FROM subtopics
-      WHERE topic_id = ?
+      WHERE topic_id IN (${placeholders})
       ORDER BY id DESC
       `,
-      [topic_id],
+      selectedTopicIds,
     );
 
-    res.status(200).json({
+    return res.status(200).send({
       success: true,
-      data: rows,
+      message: "Subtopics By Topic fetched successfully",
+      subtopics: rows,
     });
   } catch (error) {
     console.error("Get Subtopics By Topic Error:", error);

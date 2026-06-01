@@ -46,12 +46,6 @@ const seedSubtopics = async () => {
 
       [motion, "Types of Motion"],
       [motion, "Newton’s Laws"],
-
-      [genetics, "DNA Structure"],
-      [genetics, "Heredity Basics"],
-
-      [evolution, "Darwin Theory"],
-      [evolution, "Natural Selection"],
     ];
 
     for (const [topic_id, name] of subtopics) {

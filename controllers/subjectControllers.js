@@ -10,13 +10,14 @@ export const getSubjects = async (req, res) => {
       ORDER BY id DESC
     `);
 
-    res.status(200).json({
+    return res.status(200).send({
       success: true,
-      data: rows,
+      message: "Subjects fetched Successfully",
+      subjects: rows,
     });
   } catch (error) {
     console.error("Get Subjects Error:", error);
-    res.status(500).json({
+    return res.status(500).send({
       success: false,
       message: "Failed to fetch subjects",
     });

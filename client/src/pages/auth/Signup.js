@@ -1,8 +1,8 @@
 import { useState } from "react";
-import axios from "../../utils/AxiosConfig";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-// import "../scripts/script";
+import { userRegister } from "../../api/authApi";
+
 const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -29,7 +29,6 @@ const Signup = () => {
       confirmPassword,
     } = formData;
 
-    console.log("formdata", formData);
     if (!fullName) return showAlert("Please enter your first name", "error");
     if (!fatherName) return showAlert("Please enter your last name", "error");
     if (!status) return showAlert("Please enter your status", "error");
@@ -47,18 +46,16 @@ const Signup = () => {
       return showAlert("Passwords do not match", "error");
 
     try {
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register`,
-        {
-          fullName,
-          fatherName,
-          district,
-          whatsapp,
-          status,
-          email,
-          password,
-          confirmPassword,
-        },
+      // Register User
+      const data = await userRegister(
+        fullName,
+        fatherName,
+        district,
+        whatsapp,
+        status,
+        email,
+        password,
+        confirmPassword,
       );
 
       if (!data.success) {

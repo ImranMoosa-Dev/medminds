@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth";
 import "../../styles/quiz-selection.css";
 import StudentLayout from "../../components/layout/StudentLayout";
-import axios from "../../utils/AxiosConfig";
+import { getAllQuizzes } from "../../api/quizApi";
 
 const SUBJ_COLORS = {
   Biology: { bg: "#dcfce7", color: "#16a34a" },
@@ -40,9 +40,7 @@ const QuizSelection = () => {
     try {
       setLoading(true);
 
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_BASEURL}/api/v1/quizzes`,
-      );
+      const data = await getAllQuizzes();
 
       setAllQuizzes(data.quizzes || []);
       setLoading(false);
@@ -52,69 +50,6 @@ const QuizSelection = () => {
       setLoading(false);
     }
   };
-
-  // const loadQuizzes = async (user) => {
-  //   try {
-  //     const { data: userRows } = await supabase
-  //       .from("users")
-  //       .select("batch_id")
-  //       .eq("id", user.id);
-  //     const batchId = userRows?.[0]?.batch_id || null;
-
-  //     const { data: allQ, error: qErr } = await supabase
-  //       .from("quizzes")
-  //       .select("*")
-  //       .eq("is_published", true)
-  //       .order("quiz_order", { ascending: true });
-  //     if (qErr) throw qErr;
-
-  //     const { data: jRows } = await supabase
-  //       .from("quiz_batches")
-  //       .select("quiz_id, batch_id");
-
-  //     const quizBatchMap = {};
-  //     (jRows || []).forEach((r) => {
-  //       if (!quizBatchMap[r.quiz_id]) quizBatchMap[r.quiz_id] = new Set();
-  //       quizBatchMap[r.quiz_id].add(String(r.batch_id));
-  //     });
-
-  //     const quizzes = (allQ || []).filter((quiz) => {
-  //       const jBatches = quizBatchMap[quiz.id];
-  //       const hasJRows = jBatches && jBatches.size > 0;
-  //       const legacyBatch = quiz.batch_id ? String(quiz.batch_id) : null;
-  //       if (!hasJRows && !legacyBatch) return true;
-  //       if (!batchId) return false;
-  //       if (hasJRows) return jBatches.has(String(batchId));
-  //       return legacyBatch === String(batchId);
-  //     });
-
-  //     const { data: attempts, error: aErr } = await supabase
-  //       .from("quiz_attempts")
-  //       .select("quiz_id, score, total")
-  //       .eq("user_id", user.id);
-  //     if (aErr) console.warn("Attempts fetch error:", aErr);
-
-  //     const completedIds = new Set((attempts || []).map((a) => a.quiz_id));
-  //     const cMap = {};
-  //     (attempts || []).forEach((a) => {
-  //       cMap[a.quiz_id] = a;
-  //     });
-
-  //     const quizzesWithStatus = (quizzes || []).map((q) => ({
-  //       ...q,
-  //       status: completedIds.has(q.id) ? "COMPLETED" : "AVAILABLE",
-  //     }));
-
-  //     setAllQuizzes(quizzesWithStatus);
-  //     setCompletionMap(cMap);
-  //     updateProgress(quizzesWithStatus, cMap);
-  //     setLoading(false);
-  //   } catch (e) {
-  //     console.error("loadQuizzes error:", e);
-  //     setAllQuizzes([]);
-  //     setLoading(false);
-  //   }
-  // };
 
   const updateProgress = (quizzes, cMap) => {
     const completed = quizzes.filter((q) => q.status === "COMPLETED").length;
@@ -163,7 +98,7 @@ const QuizSelection = () => {
   };
 
   const startQuiz = (quizId) => {
-    navigate(`/quiz-details/${quizId}`);
+    navigate(`/quiz-details?quiz_id=${quizId}`);
   };
 
   const reviewQuiz = (quizId) => {
@@ -254,7 +189,7 @@ const QuizSelection = () => {
   return (
     <>
       {/* ═══ MAIN ═══ */}
-      <StudentLayout>
+      <StudentLayout title="Quiz Selection – MedMinds">
         {/* Welcome banner */}
         <div className="welcome-banner">
           <div className="welcome-left">

@@ -199,7 +199,6 @@ const Profile = () => {
         updates,
       );
       if (data?.success) {
-        console.log(data);
         console.log("✅ Profile saved successfully");
         showAlert("success", "Profile updated successfully!");
         setTimeout(() => {
@@ -268,7 +267,7 @@ const Profile = () => {
   const isImprover = hero.status === "improver";
 
   return (
-    <StudentLayout>
+    <StudentLayout title="My Profile – MedMinds">
       <div
         className={`alert${alert.type ? " " + alert.type : ""}`}
         id="alertSuccess"

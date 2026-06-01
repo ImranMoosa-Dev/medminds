@@ -8,24 +8,34 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import authRoutes from "./routes/authRoutes.js";
 import initDB from "./database/initDB.js";
+
+//Routes Imports
 import studentRoutes from "./routes/studentRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import subjectRoutes from "./routes/subjectRoutes.js";
+import topicRoutes from "./routes/topicRoutes.js";
+import subTopicRoutes from "./routes/subTopicRoutes.js";
+import questionRoutes from "./routes/questionRoutes.js";
+import batchRoutes from "./routes/batchRoutes.js";
+import leaderboardRoutes from "./routes/leaderboardRoutes.js";
+import customQuizRoutes from "./routes/customQuizRoutes.js";
 
 // import adminRoutes from "./routes/adminRoutes.js";
-// import questionRoutes from "./routes/questionRoutes.js";
 // import notesRoutes from "./routes/notesRoutes.js";
 
 // seeding files imports
 // import seedSubjects from "./database/seedSubject.js";
 // import seedTopics from "./database/seedTopics.js";
 // import seedSubtopics from "./database/seedSubTopics.js";
-// import seedQuestions from "./database/seedQuestions.js";
 // import seedQuizzes from "./database/seedQuizzes.js";
+// import seedQuestions from "./database/seedQuestions.js";
+
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
 // Initialize the database and create tables if they don't exist
 await initDB();
+// await seedQuestions();
 // config dotenv
 dotenv.config();
 // // ================================
@@ -33,11 +43,6 @@ dotenv.config();
 // // ================================
 const PORT = process.env.PORT || 5502;
 const NODE_ENV = process.env.NODE_ENV || "development";
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = process.env.VITE_SUPABASE_KEY;
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
-  .split(",")
-  .map((e) => e.trim());
 const JWT_SECRET = process.env.JWT_SECRET || "medminds-jwt-secret";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const JWT_COOKIE_NAME = process.env.JWT_COOKIE_NAME || "medminds_token";
@@ -63,256 +68,19 @@ app.use(
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/student", studentRoutes);
 app.use("/api/v1/quizzes", quizRoutes);
+app.use("/api/v1/subjects", subjectRoutes);
+app.use("/api/v1/topics", topicRoutes);
+app.use("/api/v1/subtopics", subTopicRoutes);
+app.use("/api/v1/questions", questionRoutes);
+app.use("/api/v1/batches", batchRoutes);
+app.use("/api/v1/leaderboard", leaderboardRoutes);
+app.use("/api/v1/custom-quiz", customQuizRoutes);
 // app.use("/api/v1/admin", adminRoutes);
-// app.use("/api/v1/question", questionRoutes);
 // app.use("/api/v1/notes", notesRoutes);
-// Static file serving should come after API routes
-// app.use(express.static(path.join(__dirname)));
-// app.use("/uploads", express.static("uploads"));
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}.`.bgYellow);
 });
-// function parseCookies(req) {
-//   const header = req.headers.cookie || "";
-//   return header.split(";").reduce((cookies, pair) => {
-//     const [name, ...rest] = pair.trim().split("=");
-//     if (!name) return cookies;
-//     cookies[name] = decodeURIComponent(rest.join("="));
-//     return cookies;
-//   }, {});
-// }
-
-// function attachUser(req, res, next) {
-//   req.user = null;
-//   const authHeader = req.headers.authorization;
-//   let token = authHeader?.startsWith("Bearer ")
-//     ? authHeader.split(" ")[1]
-//     : null;
-
-//   if (!token) {
-//     const cookies = parseCookies(req);
-//     token = cookies[JWT_COOKIE_NAME];
-//   }
-
-//   if (token) {
-//     try {
-//       req.user = jwt.verify(token, JWT_SECRET);
-//     } catch (err) {
-//       req.user = null;
-//     }
-//   }
-
-//   if (!req.user && req.session?.user) {
-//     req.user = { email: req.session.user };
-//   }
-
-//   next();
-// }
-
-// app.use(attachUser);
-
-// // ================================
-// // CONFIG ENDPOINT (for frontend)
-// // ================================
-// app.get("/api/config", (req, res) => {
-//   res.json({
-//     adminEmails: ADMIN_EMAILS,
-//   });
-// });
-
-//   // Ensure admin users exist
-//   const adminEmails = ["biologia.info1@gmail.com", "admin@medminds.com"];
-//   const adminPassword = "1234567B";
-//   for (const adminEmail of adminEmails) {
-//     const [rows] = await db.execute("SELECT * FROM users WHERE email = ?", [
-//       adminEmail,
-//     ]);
-//     if (rows.length === 0) {
-//       await db.execute(
-//         "INSERT INTO users (fullName, email, password, loggedIn, approved) VALUES (?, ?, ?, ?, ?)",
-//         ["Admin", adminEmail, adminPassword, false, true],
-//       );
-//     }
-//   }
-
-//   // Ensure guest user exists
-//   const guestEmail = "guest@gmail.com";
-//   const guestPassword = "Guest123";
-//   const [guestRows] = await db.execute("SELECT * FROM users WHERE email = ?", [
-//     guestEmail,
-//   ]);
-//   if (guestRows.length === 0) {
-//     await db.execute(
-//       "INSERT INTO users (fullName, email, password, loggedIn, approved, fatherName, district, whatsapp, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-//       [
-//         "Guest",
-//         guestEmail,
-//         guestPassword,
-//         false,
-//         true,
-//         "N/A",
-//         "Badin",
-//         "12345678910",
-//         "fresher",
-//       ],
-//     );
-//   }
-
-//   app.post("/auth/logout", async (req, res) => {
-//     try {
-//       req.session.destroy(() => {});
-//       res.clearCookie(JWT_COOKIE_NAME);
-//       res.json({ success: true, message: "Logged out" });
-//     } catch (err) {
-//       console.error("Logout error:", err);
-//       res.status(500).json({ error: "Error logging out" });
-//     }
-//   });
-
-//   app.get("/admin-updates.html", (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       res.sendFile(path.join(__dirname, "admin-updates.html"));
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/admin-notes.html", (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       res.sendFile(path.join(__dirname, "admin-notes.html"));
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/admin/students", async (req, res) => {
-//     if (req.session.user === "biologia.info1@gmail.com") {
-//       try {
-//         const [users] = await db.execute("SELECT * FROM users");
-//         let html = fs.readFileSync(
-//           path.join(__dirname, "admin-students.html"),
-//           "utf8",
-//         );
-//         let studentsHtml = "";
-//         users.forEach((user) => {
-//           if (
-//             user.email !== "biologia.info1@gmail.com" &&
-//             user.email !== "admin@medminds.com"
-//           ) {
-//             studentsHtml += `<div class="student">
-//                             <div class="student-info">
-//                                 <p>Name: ${user.fullName}</p>
-//                                 <p>Email: ${user.email}</p>
-//                                 <p>Password: ${user.password}</p>
-//                             </div>
-//                             <div class="student-approval">
-//                                 <form method="post" action="/approve">
-//                                     <input type="hidden" name="email" value="${user.email}">
-//                                     <input type="radio" name="status" value="approved" ${user.approved ? "checked" : ""}> Login Approved<br>
-//                                     <input type="radio" name="status" value="disapproved" ${!user.approved ? "checked" : ""}> Login Disapproved<br>
-//                                     <button type="submit">Update</button>
-//                                 </form>
-//                             </div>
-//                         </div>`;
-//           }
-//         });
-//         html = html.replace(
-//           "<!-- Students will be inserted here -->",
-//           studentsHtml,
-//         );
-//         res.send(html);
-//       } catch (err) {
-//         res.status(500).send("Error loading students");
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/admin/quizzes", async (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       try {
-//         const [quizDefs] = await db.execute("SELECT * FROM quiz_definitions");
-//         const [quizzes] = await db.execute(
-//           "SELECT * FROM quizzes ORDER BY date DESC",
-//         );
-//         const [users] = await db.execute("SELECT email, fullName FROM users");
-//         const userMap = {};
-//         users.forEach((u) => (userMap[u.email] = u.fullName));
-//         let html = fs.readFileSync(
-//           path.join(__dirname, "admin-quizzes.html"),
-//           "utf8",
-//         );
-//         let quizDefsHtml =
-//           '<table border="1" style="width:100%; border-collapse:collapse;"><tr><th>Name</th><th>Subject</th><th>Topics</th><th>Duration</th><th>MCQs</th><th>Test Type</th><th>Actions</th></tr>';
-//         quizDefs.forEach((q) => {
-//           quizDefsHtml += `<tr><td>${q.name}</td><td>${q.subject}</td><td>${q.topics}</td><td>${q.duration} min</td><td>${q.totalMcqs}</td><td>${q.testType || "N/A"}</td><td><a href="/edit-quiz/${q.id}">Edit</a> | <a href="/view-quiz-results/${q.id}">View Results</a> | <form method="post" action="/delete-quiz" style="display:inline;"><button type="submit" name="id" value="${q.id}">Delete</button></form></td></tr>`;
-//         });
-//         quizDefsHtml += "</table>";
-//         html = html.replace(
-//           "<!-- Existing quizzes will be inserted here -->",
-//           quizDefsHtml,
-//         );
-//         // Calculate ranks
-//         const studentAverages = {};
-//         quizzes.forEach((quiz) => {
-//           const results = JSON.parse(quiz.results);
-//           let totalCorrect = 0;
-//           let totalQuestions = 0;
-//           Object.values(results).forEach((subject) => {
-//             totalCorrect += subject.correct;
-//             totalQuestions += subject.total;
-//           });
-//           if (!studentAverages[quiz.email]) {
-//             studentAverages[quiz.email] = { correct: 0, total: 0 };
-//           }
-//           studentAverages[quiz.email].correct += totalCorrect;
-//           studentAverages[quiz.email].total += totalQuestions;
-//         });
-//         const averages = Object.entries(studentAverages)
-//           .map(([email, data]) => ({
-//             email,
-//             average: data.total > 0 ? (data.correct / data.total) * 100 : 0,
-//           }))
-//           .sort((a, b) => b.average - a.average);
-//         const ranks = {};
-//         averages.forEach((student, index) => {
-//           ranks[student.email] = index + 1;
-//         });
-//         let quizzesHtml = "";
-//         quizzes.forEach((quiz) => {
-//           const results = JSON.parse(quiz.results);
-//           const name = userMap[quiz.email] || quiz.email;
-//           let resultStr = Object.keys(results)
-//             .map(
-//               (subject) =>
-//                 `${subject}: ${results[subject].correct}/${results[subject].total}`,
-//             )
-//             .join(", ");
-//           quizzesHtml += `<li>${name} (Rank: ${ranks[quiz.email] || "N/A"}) - ${new Date(quiz.date).toLocaleString()} - ${resultStr}</li>`;
-//         });
-//         html = html.replace(
-//           "<!-- Quiz submissions will be inserted here -->",
-//           quizzesHtml,
-//         );
-//         res.send(html);
-//       } catch (err) {
-//         res.status(500).send("Error loading quizzes");
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
 
 //   app.get("/view-quiz-results/:id", async (req, res) => {
 //     if (
@@ -432,33 +200,6 @@ app.listen(PORT, () => {
 //       } catch (err) {
 //         console.error("Error loading updates:", err);
 //         res.status(500).send("Error loading updates");
-//       }
-//     } else {
-//       res.redirect("/dashboard.html");
-//     }
-//   });
-
-//   app.get("/admin/notes", async (req, res) => {
-//     if (
-//       req.session.user === "biologia.info1@gmail.com" ||
-//       req.session.user === "admin@medminds.com"
-//     ) {
-//       try {
-//         const [notes] = await db.execute(
-//           "SELECT * FROM notes ORDER BY uploaded_at DESC",
-//         );
-//         let html = fs.readFileSync(
-//           path.join(__dirname, "admin-notes.html"),
-//           "utf8",
-//         );
-//         let notesHtml = "";
-//         notes.forEach((n) => {
-//           notesHtml += `<li>${n.subject} - ${n.title} <a href="/uploads/${n.filename}" target="_blank">View</a> <form method="post" action="/delete-note" style="display:inline;"><button type="submit" name="id" value="${n.id}">Delete</button></form></li>`;
-//         });
-//         html = html.replace("<!-- Notes will be inserted here -->", notesHtml);
-//         res.send(html);
-//       } catch (err) {
-//         res.status(500).send("Error loading notes");
 //       }
 //     } else {
 //       res.redirect("/dashboard.html");

@@ -163,6 +163,7 @@ export const loginController = async (req, res) => {
       token,
       user: {
         id: user.id,
+        batchId: user.batch_id,
         fullName: user.fullName,
         fatherName: user.fatherName,
         district: user.district,
@@ -174,7 +175,7 @@ export const loginController = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send({ success: false, error: "Error logging in" });
+    return res.status(500).send({ success: false, error: "Error logging in" });
   }
 };
 

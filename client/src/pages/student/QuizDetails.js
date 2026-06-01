@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useParams } from "react-router-dom";
-import "../styles/quiz-details.css";
-import axios from "../utils/AxiosConfig";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import "../../styles/quiz-details.css";
+import { getQuizById } from "../../api/quizApi";
+import { getCustomQuizById } from "../../api/customQuizApi";
 
 export default function QuizDetails() {
   const navigate = useNavigate();
@@ -13,18 +14,19 @@ export default function QuizDetails() {
   const [existingAttempt, setExistingAttempt] = useState(null);
   const [batch, setBatch] = useState(null);
   const [questionCount, setQuestionCount] = useState(0);
-
+  const quizId = searchParams.get("quiz_id");
   const isCustom = searchParams.get("custom") === "1";
   const attemptId = searchParams.get("attempt_id");
-  const { quizId } = useParams();
 
+  // load quiz
   const loadQuiz = async () => {
     setLoading(true);
-    if (!quizId) return;
+    if (!quizId) {
+      setLoading(false);
+      return;
+    }
     try {
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_BASEURL}/api/v1/quizzes/quiz/${quizId}`,
-      );
+      const data = await getQuizById(quizId);
       if (data?.success) {
         setQuiz(data.quiz);
       }
@@ -35,100 +37,50 @@ export default function QuizDetails() {
       setLoading(false);
     }
   };
+
+  // load custom test
+  const loadCustomTest = async () => {
+    try {
+      setLoading(true);
+
+      const data = await getCustomQuizById(attemptId);
+
+      if (!data?.success) {
+        setError("Custom test not found or access denied.");
+        return;
+      }
+
+      setCustomAttempt(data.attempt);
+
+      setQuestionCount(data.attempt?.questions_json?.length || 0);
+    } catch (error) {
+      console.log(error);
+
+      setError(
+        error?.response?.data?.message ||
+          "Custom test not found or access denied.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    loadQuiz();
-  }, []);
-  //   useEffect(() => {
-  //     const init = async () => {
-  //       try {
-  //         const { data: { user } } = await supabase.auth.getUser();
-  //         if (!user) { navigate('/login'); return; }
-
-  //         applyTheme();
-
-  //         if (isCustom && attemptId) {
-  //           await loadCustomTest(attemptId, user.id);
-  //         } else if (quizId) {
-  //           await loadQuiz(quizId, user.id);
-  //         } else {
-  //           setError('No quiz ID found in the URL.');
-  //         }
-  //       } catch (err) {
-  //         setError(err.message);
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
-  //     init();
-  //   }, []);
-
-  //   const loadCustomTest = async (attemptId, userId) => {
-  //     const { data: attempt, error } = await supabase
-  //       .from('custom_test_attempts')
-  //       .select('*')
-  //       .eq('id', attemptId)
-  //       .eq('user_id', userId)
-  //       .single();
-
-  //     if (error || !attempt) { setError('Custom test not found or access denied.'); return; }
-  //     setCustomAttempt(attempt);
-  //     setQuestionCount(attempt.questions_json?.length || 0);
-  //   };
-
-  //   const loadQuiz = async (quizId, userId) => {
-  //     const { data: quizData, error: quizError } = await supabase
-  //       .from('quizzes')
-  //       .select('*')
-  //       .eq('id', quizId)
-  //       .single();
-
-  //     if (quizError || !quizData) { setError('Quiz not found.'); return; }
-  //     setQuiz(quizData);
-
-  //     const { count } = await supabase
-  //       .from('questions')
-  //       .select('id', { count: 'exact', head: true })
-  //       .eq('quiz_id', quizId);
-  //     setQuestionCount(count || 0);
-
-  //     if (quizData.batch_id) {
-  //       const { data: batchData } = await supabase
-  //         .from('batches')
-  //         .select('name, description')
-  //         .eq('id', quizData.batch_id)
-  //         .single();
-  //       setBatch(batchData);
-
-  //       const { data: profile } = await supabase
-  //         .from('users')
-  //         .select('batch_id')
-  //         .eq('id', userId)
-  //         .single();
-
-  //       if (profile && profile.batch_id !== quizData.batch_id) {
-  //         setError('BATCH_RESTRICTED');
-  //         return;
-  //       }
-  //     }
-
-  //     const { data: existing } = await supabase
-  //       .from('quiz_attempts')
-  //       .select('id, score, total, created_at')
-  //       .eq('quiz_id', quizId)
-  //       .eq('user_id', userId)
-  //       .maybeSingle();
-  //     setExistingAttempt(existing);
-  //   };
+    if (isCustom && attemptId) {
+      loadCustomTest();
+    } else if (quizId) {
+      loadQuiz();
+    }
+  }, [quizId, attemptId, isCustom]);
 
   const startQuiz = () => {
-    localStorage.setItem("selectedQuizId", quiz.id);
+    localStorage.setItem("selectedQuizId", quiz?.id || quiz?.[0]?.id);
     navigate("/quiz");
   };
 
   const startCustomTest = () => {
     localStorage.setItem("isCustomTest", "1");
     localStorage.setItem("customTestAttemptId", customAttempt.id);
-    localStorage.removeItem("selectedQuizId");
+    // localStorage.removeItem("selectedQuizId");
     navigate("/quiz");
   };
 
@@ -430,13 +382,15 @@ function QuizView({
           <div className="detail-item">
             <div className="detail-label">❓ Questions</div>
             <div className="detail-value" style={{ color: "#2e7d32" }}>
-              {questionCount}
+              {/* {questionCount} */}
+              {quiz?.totalMcqs}
             </div>
           </div>
           <div className="detail-item">
             <div className="detail-label">⏱️ Est. Duration</div>
             <div className="detail-value">
-              {estimatedMins}
+              {/* {estimatedMins} */}
+              {`${quiz?.duration} mins`}
               <span
                 style={{
                   fontSize: 13,

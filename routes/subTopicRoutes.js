@@ -6,13 +6,14 @@ import {
   createSubtopic,
   updateSubtopic,
   deleteSubtopic,
-} from "../controllers/subtopicController.js";
+} from "../controllers/subTopicControllers.js";
 
 const subtopicRoutes = express.Router();
 
 subtopicRoutes.get("/", getSubtopics);
 subtopicRoutes.get("/:id", getSubtopicById);
-subtopicRoutes.get("/topic/:topic_id", getSubtopicsByTopic);
+// get sub-topics by topic id
+subtopicRoutes.post("/by-topics", getSubtopicsByTopic);
 subtopicRoutes.post("/create", createSubtopic);
 subtopicRoutes.put("/update/:id", updateSubtopic);
 subtopicRoutes.delete("/delete/:id", deleteSubtopic);
