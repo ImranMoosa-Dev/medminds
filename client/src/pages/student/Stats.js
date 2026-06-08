@@ -568,7 +568,7 @@ const Stats = () => {
   return (
     <>
       {/* ═══ MAIN ═══ */}
-      <StudentLayout>
+      <StudentLayout title="Statistics – MedMinds">
         {/* Page title */}
         <div className="page-title">
           <h1>📊 Your Statistics</h1>

@@ -251,16 +251,16 @@ const CreateTest = () => {
         duration_seconds,
       };
 
-      // Create Custom Quiz
+      // Create Custom Quiz API
       const data = await createCustomQuiz(payload);
 
       const attemptId = data.quiz.id;
 
       // localStorage.setItem("customTestMeta", JSON.stringify(meta));
       localStorage.setItem("customTestAttemptId", attemptId);
-      localStorage.setItem("questions", JSON.stringify(questions));
+      // localStorage.setItem("questions", JSON.stringify(questions));
       localStorage.setItem("isCustomTest", "1");
-
+      localStorage.removeItem("selectedQuizId");
       navigate(`/quiz-details?custom=1&attempt_id=${attemptId}`);
     } catch (e) {
       console.error(e);

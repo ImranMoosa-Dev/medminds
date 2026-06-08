@@ -1,11 +1,14 @@
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import Signup from "./pages/auth/Signup";
+import Register from "./pages/auth/Register";
 import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AccountConfirmation from "./pages/auth/AccountConfirmation";
 import VerifyEmail from "./pages/auth/VerifyEmail";
+
+// public routes imports
+import PublicRoutes from "./components/Routes/PublicRoutes";
 
 // student private routes imports
 import StudentPrivateRoute from "./components/Routes/StudentPrivateRoute";
@@ -20,22 +23,30 @@ import QuizDetails from "./pages/student/QuizDetails";
 import Result from "./pages/student/Result";
 import MyBatch from "./pages/student/MyBatch";
 import Leaderboard from "./pages/student/Leaderboard";
+import Batches from "./pages/student/Batches";
 
+// ADMIN IMPORTS
+import Admin from "./pages/admin/Admin";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Signup />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password/:token" element={<ResetPassword />} />
-      <Route
-        path="/account-confirmation/:email"
-        element={<AccountConfirmation />}
-      />
-      <Route path="/verify-email/:token" element={<VerifyEmail />} />
+      {/* PUBLIC ROUTES */}
 
-      {/* student routes */}
+      <Route element={<PublicRoutes />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
+        <Route
+          path="/account-confirmation/:email"
+          element={<AccountConfirmation />}
+        />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+      </Route>
+      {/* STUDENT PRIVATE ROUTES */}
+
       <Route element={<StudentPrivateRoute />}>
         <Route path="/quiz-selection" element={<QuizSelection />} />
         <Route path="/profile" element={<Profile />} />
@@ -46,11 +57,13 @@ function App() {
         <Route path="/result" element={<Result />} />
         <Route path="/my-batch" element={<MyBatch />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/batches" element={<Batches />} />
+        <Route path="/stats" element={<Stats />} />
       </Route>
 
       {/* test route */}
       <Route path="/review" element={<Review />} />
-      <Route path="/stats" element={<Stats />} />
+      <Route path="/admin" element={<Admin />} />
     </Routes>
   );
 }

@@ -64,6 +64,7 @@ const Quiz = () => {
         return;
       }
 
+      // start quiz and get questions + attempt details
       const data = await startQuiz(quizId);
 
       if (!data.success) {
@@ -108,18 +109,9 @@ const Quiz = () => {
         return;
       }
 
-      // Transform questions from backend format (opt1-4) to expected format (option_a-d)
-      const transformedQuestions = (data.questions || []).map((q) => ({
-        ...q,
-        option_a: q.opt1,
-        option_b: q.opt2,
-        option_c: q.opt3,
-        option_d: q.opt4,
-      }));
-
       const attempt = data.attempt;
 
-      setQuestions(transformedQuestions);
+      setQuestions(data.questions || []);
       setAttemptId(attempt.id);
       setQuizName(data.quiz?.name || "Custom Practice Test");
 

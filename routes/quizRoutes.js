@@ -8,6 +8,7 @@ import {
   startQuizController,
   submitQuizController,
   getQuizResultController,
+  getQuizHistoryController,
 } from "../controllers/quizControllers.js";
 
 const quizRoutes = Router();
@@ -37,4 +38,6 @@ quizRoutes.post("/submit/:attemptId", requireSignIn, submitQuizController);
 // get quiz attempt result
 quizRoutes.get("/result/:attemptId", requireSignIn, getQuizResultController);
 
+// get quiz history
+quizRoutes.get("/history", requireSignIn, getQuizHistoryController);
 export default quizRoutes;

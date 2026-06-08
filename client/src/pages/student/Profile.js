@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../context/auth";
 import "../../styles/profile.css";
 import StudentLayout from "../../components/layout/StudentLayout";
-import axios from "../../utils/AxiosConfig";
-
+import { getQuizHistory } from "../../api/quizApi";
+import {
+  deleteStudentAccount,
+  getStudentProfile,
+  updateStudentProfile,
+} from "../../api/profileApi";
 const Profile = () => {
   const [auth, setAuth] = useAuth();
   // const [currentUser, setCurrentUser] = useState(null);
@@ -37,10 +41,7 @@ const Profile = () => {
   // fetch profile data on mount
   const loadUserProfile = async () => {
     try {
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_BASEURL}/api/v1/student/profile`,
-      );
-
+      const data = await getStudentProfile();
       if (data?.success) {
         // Split fullName into firstName and lastName
         const fullName = data.user?.fullName?.trim() || "";
@@ -70,9 +71,9 @@ const Profile = () => {
       setHero({
         initial: (first.charAt(0) || "?").toUpperCase(),
         name: fullName,
-        email: data.email || data.email || "—",
-        status: data.status || "fresher",
-        district: data.district || "",
+        email: data.user.email || data.email || "—",
+        status: data.user.status || "fresher",
+        district: data.user.district || "",
       });
       setProfileLoaded(true);
     } catch (e) {
@@ -88,83 +89,51 @@ const Profile = () => {
 
   useEffect(() => {
     loadUserProfile();
+    loadQuizStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // fetch quiz stats
-  // const loadQuizStats = async (user) => {
+  const loadQuizStats = async () => {
+    try {
+      const data = await getQuizHistory();
 
-  //   try {
-  //     const { data: attempts, error } = await supabase
-  //       .from("quiz_attempts")
-  //       .select("score, total, quiz_id, created_at")
-  //       .eq("user_id", u.id)
-  //       .order("created_at", { ascending: false });
-  //     if (error) throw error;
+      if (!data?.success) {
+        setHistoryRows([]);
+        return;
+      }
 
-  //     const count = attempts?.length || 0;
-  //     if (count === 0) {
-  //       setStats({ attempts: "0", best: "—", avg: "—" });
-  //       setHistoryRows([]);
-  //       return;
-  //     }
+      setStats({
+        attempts: data.stats.attempts,
+        best: `${data.stats.best}%`,
+        avg: `${data.stats.avg}%`,
+      });
 
-  //     let best = 0,
-  //       totalPct = 0;
-  //     attempts.forEach((a) => {
-  //       const p = a.total > 0 ? Math.round((a.score / a.total) * 100) : 0;
-  //       if (p > best) best = p;
-  //       totalPct += p;
-  //     });
-  //     const avg = Math.round(totalPct / count);
-  //     setStats({ attempts: count, best: best + "%", avg: avg + "%" });
+      const rows = data.history.map((item, index) => ({
+        i: index + 1,
+        name: item.quizName,
+        score: item.score,
+        total: item.totalQuestions,
+        pct: item.percentage,
+        cls:
+          item.percentage >= 70
+            ? "pct-green"
+            : item.percentage >= 50
+              ? "pct-amber"
+              : "pct-red",
+        date: new Date(item.submittedAt).toLocaleDateString("en-PK", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
+      }));
 
-  //     let quizNames = {};
-  //     try {
-  //       const ids = [
-  //         ...new Set(attempts.map((a) => a.quiz_id).filter(Boolean)),
-  //       ];
-  //       if (ids.length) {
-  //         const { data: quizzes } = await supabase
-  //           .from("quizzes")
-  //           .select("id, name")
-  //           .in("id", ids);
-  //         (quizzes || []).forEach((q) => {
-  //           quizNames[q.id] = q.name;
-  //         });
-  //       }
-  //     } catch (_) {}
-
-  //     const rows = attempts.map((a, i) => {
-  //       const pct = a.total > 0 ? Math.round((a.score / a.total) * 100) : 0;
-  //       const cls =
-  //         pct >= 70 ? "pct-green" : pct >= 50 ? "pct-amber" : "pct-red";
-  //       const name =
-  //         quizNames[a.quiz_id] ||
-  //         (a.quiz_id ? `Quiz #${a.quiz_id}` : "General Quiz");
-  //       const date = a.created_at
-  //         ? new Date(a.created_at).toLocaleDateString("en-PK", {
-  //             day: "numeric",
-  //             month: "short",
-  //             year: "numeric",
-  //           })
-  //         : "—";
-  //       return {
-  //         i: i + 1,
-  //         name,
-  //         score: a.score,
-  //         total: a.total,
-  //         pct,
-  //         cls,
-  //         date,
-  //       };
-  //     });
-  //     setHistoryRows(rows);
-  //   } catch (e) {
-  //     console.error("loadQuizStats error:", e);
-  //     setHistoryRows("error");
-  //   }
-  // };
+      setHistoryRows(rows);
+    } catch (error) {
+      console.error(error);
+      setHistoryRows("error");
+    }
+  };
 
   const enableEditMode = (e) => {
     if (e) e.preventDefault();
@@ -194,10 +163,7 @@ const Profile = () => {
 
       console.log("💾 Saving profile for user:");
 
-      const { data } = await axios.put(
-        `${process.env.REACT_APP_BASEURL}/api/v1/student/update-profile`,
-        updates,
-      );
+      const data = await updateStudentProfile(updates);
       if (data?.success) {
         console.log("✅ Profile saved successfully");
         showAlert("success", "Profile updated successfully!");
@@ -244,9 +210,7 @@ const Profile = () => {
     )
       return;
 
-    const { data } = await axios.delete(
-      `${process.env.REACT_APP_BASEURL}/api/v1/student/delete-account`,
-    );
+    const data = await deleteStudentAccount();
     if (data?.success) {
       localStorage.clear();
       setAuth({ user: null, token: "" });

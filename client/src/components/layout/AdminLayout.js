@@ -1,11 +1,11 @@
 import React from "react";
-import Header from "../student/Header";
+import AdminHeader from "../admin/AdminHeader";
 import { Helmet } from "react-helmet";
 
-const Layout = ({
+const AdminLayout = ({
   children,
-  title = "Medminds",
-  description = "Student Learning Portal",
+  title = "Admin Dashboard - Medminds",
+  description = "Admin Dashboard",
   keywords = "mern, react,node,mongodb",
   author = "medminds",
 }) => {
@@ -18,10 +18,10 @@ const Layout = ({
         <meta name="author" content={author} />
         <title>{title}</title>
       </Helmet>
-      <Header />
+      <AdminHeader />
       <main style={{ minHeight: "70vh" }}>{children}</main>
     </div>
   );
 };
 
-export default Layout;
+export default AdminLayout;

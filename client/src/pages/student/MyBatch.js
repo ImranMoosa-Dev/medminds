@@ -81,15 +81,6 @@ const MyBatch = () => {
     try {
       setLoading(true);
 
-      // no batch assigned
-      if (!auth.user.batchId) {
-        setBatch(null);
-        setUserRow(auth.user);
-        setAllRows([]);
-        setLoading(false);
-        return;
-      }
-
       /*
     |--------------------------------------------------------------------------
     | FETCH MY BATCH
@@ -100,20 +91,15 @@ const MyBatch = () => {
       const data = await getMyBatch();
 
       if (data?.success) {
-        setBatch(data.batch);
+        setBatch(data.batch || null);
 
         setUserRow({
-          full_name: data.user.fullName,
+          full_name: data.user.fullName || "",
         });
 
-        setAllRows(data.schedule || []);
+        setAllRows(data?.schedule || []);
       }
 
-      setLoading(false);
-
-      setBatch(data.batch);
-      setUserRow({ full_name: data.user.fullName });
-      setAllRows(data?.schedule || []);
       setLoading(false);
     } catch (e) {
       console.error("my-batch init error:", e);

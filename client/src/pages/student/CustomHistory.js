@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import StudenLayout from "../../components/layout/StudentLayout";
+import {
+  getCustomQuizAttemptsHistory,
+  getCustomQuizById,
+} from "../../api/customQuizApi";
 import "../../styles/custom-history.css";
 
 const CustomHistory = () => {
@@ -19,133 +23,117 @@ const CustomHistory = () => {
   const [historyMeta, setHistoryMeta] = useState("");
 
   useEffect(() => {
-    document.title = "My Custom Tests – MedMinds";
-    const saved = localStorage.getItem("medminds-theme");
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const initial = saved || (prefersDark ? "dark" : "light");
-    document.documentElement.setAttribute("data-theme", initial);
-    setTheme(initial);
+    loadHistory();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  //   const loadHistory = async (user) => {
-  //     try {
-  //       const { data: attempts, error } = await supabase
-  //         .from("custom_test_attempts")
-  //         .select("*")
-  //         .eq("user_id", user.id)
-  //         .order("created_at", { ascending: false });
-  //       if (error) throw error;
+  const loadHistory = async () => {
+    try {
+      setLoadingTable(true);
 
-  //       const items = attempts || [];
+      // GET CUSTOM QUIZ ATTEMPT HISTORY API
 
-  //       let totalQuestions = 0;
-  //       let totalCorrect = 0;
-  //       let totalWrong = 0;
+      const data = await getCustomQuizAttemptsHistory();
+      if (data?.success) {
+        const items = data?.attempts || [];
+        // set list
+        setList(items);
 
-  //       items.forEach((a) => {
-  //         if (a.status !== "completed") return;
-  //         const answered = Object.keys(a.answers || {}).length;
-  //         totalQuestions += answered;
-  //         totalCorrect += a.score || 0;
-  //         totalWrong += answered - (a.score || 0);
-  //       });
+        // summary from backend (no need to calculate again)
+        setSummary({
+          totalTests: data?.summary?.totalTests,
+          totalQuestions: data?.summary?.totalQuestions,
+          totalCorrect: data?.summary?.totalCorrect,
+          totalWrong: data?.summary?.totalWrong,
+        });
 
-  //       setSummary({
-  //         totalTests: items.length,
-  //         totalQuestions: totalQuestions.toLocaleString(),
-  //         totalCorrect: totalCorrect.toLocaleString(),
-  //         totalWrong: totalWrong.toLocaleString(),
-  //       });
+        const completed = data?.meta?.completed;
 
-  //       const completed = items.filter((a) => a.status === "completed").length;
-  //       setHistoryMeta(`${items.length} total · ${completed} completed`);
+        setHistoryMeta(`${items.length} total · ${completed} completed`);
+      }
+      setLoadingTable(false);
+    } catch (err) {
+      console.error("loadHistory error:", err);
+      setErrored(true);
+      setLoadingTable(false);
+    }
+  };
 
-  //       setList(items);
-  //       setLoadingTable(false);
-  //     } catch (e) {
-  //       console.error("loadHistory error:", e);
-  //       setErrored(true);
-  //       setLoadingTable(false);
-  //     }
-  //   };
+  const resumeTest = async (attemptId) => {
+    try {
+      const data = await getCustomQuizById(attemptId);
 
-  //   const resumeTest = async (attemptId) => {
-  //     try {
-  //       const { data: attempt, error } = await supabase
-  //         .from("custom_test_attempts")
-  //         .select("*")
-  //         .eq("id", attemptId)
-  //         .single();
+      if (!data?.success) {
+        alert("Could not load test");
+        return;
+      }
 
-  //       if (error || !attempt) {
-  //         window.alert("Could not load this test. Please try again.");
-  //         return;
-  //       }
+      const attempt = data.attempt;
+      localStorage.setItem(
+        "questions",
+        JSON.stringify(attempt.questions_json || []),
+      );
+      localStorage.setItem("customTestAttemptId", attempt.id);
+      localStorage.setItem(
+        "customTestMeta",
+        JSON.stringify({
+          subjects: attempt.subjects || [],
+          topics: attempt.topics || [],
+          subtopics: attempt.subtopics || [],
+          mcq_count: attempt.total || 0,
+          duration_seconds:
+            attempt.duration_seconds || (attempt.total || 0) * 60,
+          is_custom: true,
+        }),
+      );
+      localStorage.setItem("isCustomTest", "1");
+      localStorage.removeItem("selectedQuizId");
+      localStorage.removeItem("customTestReview");
 
-  //       localStorage.setItem(
-  //         "questions",
-  //         JSON.stringify(attempt.questions_json || []),
-  //       );
-  //       localStorage.setItem("customTestAttemptId", attempt.id);
-  //       localStorage.setItem(
-  //         "customTestMeta",
-  //         JSON.stringify({
-  //           subjects: attempt.subjects || [],
-  //           topics: attempt.topics || [],
-  //           subtopics: attempt.subtopics || [],
-  //           mcq_count: attempt.total || 0,
-  //           duration_seconds:
-  //             attempt.duration_seconds || (attempt.total || 0) * 60,
-  //           is_custom: true,
-  //         }),
-  //       );
-  //       localStorage.setItem("isCustomTest", "1");
-  //       localStorage.removeItem("selectedQuizId");
-  //       localStorage.removeItem("customTestReview");
+      navigate("/quiz");
+    } catch (e) {
+      console.error("resumeTest error:", e);
+      window.alert("Error resuming test: " + e.message);
+    }
+  };
 
-  //       window.location.href = "quiz.html";
-  //     } catch (e) {
-  //       console.error("resumeTest error:", e);
-  //       window.alert("Error resuming test: " + e.message);
-  //     }
-  //   };
+  const openReview = async (attemptId) => {
+    try {
+      const data = await getCustomQuizById(attemptId);
 
-  //   const openReview = async (attemptId) => {
-  //     try {
-  //       const { data: attempt, error } = await supabase
-  //         .from("custom_test_attempts")
-  //         .select("*")
-  //         .eq("id", attemptId)
-  //         .single();
+      if (!data?.success) {
+        alert("Could not load review");
+        return;
+      }
 
-  //       if (error || !attempt) {
-  //         window.alert("Could not load this test. Please try again.");
-  //         return;
-  //       }
+      const attempt = data.attempt;
 
-  //       localStorage.setItem(
-  //         "questions",
-  //         JSON.stringify(attempt.questions_json || []),
-  //       );
-  //       localStorage.setItem("answers", JSON.stringify(attempt.answers || {}));
-  //       localStorage.setItem("customTestScore", attempt.score || 0);
-  //       localStorage.setItem("customTestTotal", attempt.total || 0);
-  //       localStorage.setItem("customTestAttemptId", attempt.id);
-  //       localStorage.setItem("isCustomTest", "1");
-  //       localStorage.setItem("customTestReview", "1");
-  //       localStorage.removeItem("selectedQuizId");
+      localStorage.setItem(
+        "questions",
+        JSON.stringify(attempt.questions_json || []),
+      );
 
-  //       window.location.href = "result.html";
-  //     } catch (e) {
-  //       console.error("openReview error:", e);
-  //       window.alert("Error loading review: " + e.message);
-  //     }
-  //   };
+      localStorage.setItem("answers", JSON.stringify(attempt.answers || {}));
 
+      localStorage.setItem("customTestScore", attempt.score || 0);
+
+      localStorage.setItem("customTestTotal", attempt.total_questions || 0);
+
+      localStorage.setItem("customTestAttemptId", attempt.id);
+
+      localStorage.setItem("isCustomTest", "1");
+
+      localStorage.setItem("customTestReview", "1");
+
+      localStorage.removeItem("selectedQuizId");
+
+      navigate(`/student/custom-test-result/${attempt.id}`);
+    } catch (e) {
+      console.error("openReview error:", e);
+      alert("Error loading review: " + e.message);
+    }
+  };
   const buildRowData = (a) => {
     const topics = a.topics || [];
     const subjects = a.subjects || [];
@@ -209,7 +197,7 @@ const CustomHistory = () => {
 
   return (
     <>
-      <StudenLayout>
+      <StudenLayout title="My Custom Tests – MedMinds">
         <div className="page-title">
           <h1>📋 My Custom Tests</h1>
           <p>All custom practice tests you've created and taken</p>
@@ -281,7 +269,7 @@ const CustomHistory = () => {
                   <br />
                   Start your first practice session now!
                 </p>
-                <a href="create-test.html" className="btn-create">
+                <a href="/create-test" className="btn-create">
                   🚀 Create a Test
                 </a>
               </div>
@@ -404,9 +392,19 @@ const CustomHistory = () => {
                           <td className="date-cell">{r.date}</td>
                           <td>
                             {r.isCompleted ? (
-                              <button className="btn-review">🔍 Review</button>
+                              <button
+                                className="btn-review"
+                                onClick={() => openReview(a.id)}
+                              >
+                                🔍 Review
+                              </button>
                             ) : (
-                              <button className="btn-resume">▶ Resume</button>
+                              <button
+                                className="btn-resume"
+                                onClick={() => resumeTest(a.id)}
+                              >
+                                ▶ Resume
+                              </button>
                             )}
                           </td>
                         </tr>

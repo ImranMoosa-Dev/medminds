@@ -46,7 +46,7 @@ body {
   transition:
     background 0.3s,
     color 0.3s;
-} */
+}
 
 /* ── HEADER ── */
 .site-header {
@@ -201,6 +201,7 @@ body {
   cursor: pointer;
   font-family: "DM Sans", sans-serif;
 }
+*/
 
 /* ── MAIN ── */
 main {
@@ -518,6 +519,7 @@ main {
   color: var(--text);
   border: 2px solid var(--border);
 }
+
 .btn-ghost:hover {
   border-color: var(--blue-main);
   color: var(--blue-main);

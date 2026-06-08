@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/auth";
-import "../styles/header.css";
+import { useAuth } from "../../context/auth";
+import "../../styles/header.css";
 const Header = () => {
   const [auth, setAuth] = useAuth();
   const [theme, setTheme] = useState("light");
@@ -15,10 +15,70 @@ const Header = () => {
     setTheme(savedTheme);
     document.documentElement.setAttribute("data-theme", savedTheme);
   }, []);
+  // Listen for theme changes from other tabs or manual localStorage edits
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "medminds-theme") {
+        const newTheme = e.newValue || "light";
+        setTheme(newTheme);
+        document.documentElement.setAttribute("data-theme", newTheme);
+      }
+    };
+
+    // Listen for OS-level theme changes
+    const mq =
+      window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+    const onPrefChange = (ev) => {
+      const prefers = ev.matches ? "dark" : "light";
+      const saved = localStorage.getItem("medminds-theme");
+      if (!saved) {
+        setTheme(prefers);
+        document.documentElement.setAttribute("data-theme", prefers);
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    if (mq && mq.addEventListener) mq.addEventListener("change", onPrefChange);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      if (mq && mq.removeEventListener)
+        mq.removeEventListener("change", onPrefChange);
+    };
+  }, []);
   // Update theme whenever state changes
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("medminds-theme", theme);
+
+    // Also apply inline CSS variable overrides so theme applies
+    // even if some stylesheets redefine :root later.
+    const root = document.documentElement;
+    const lightVars = {
+      "--bg": "#eef3fa",
+      "--card": "#ffffff",
+      "--border": "#dde8f5",
+      "--text": "#0d1f3c",
+      "--muted": "#5a6b82",
+      "--blue-main": "#0b63b7",
+      "--blue-mid": "#0a4a8f",
+      "--blue-dark": "#072f6b",
+    };
+    const darkVars = {
+      "--bg": "#0d1623",
+      "--card": "#132039",
+      "--border": "#1e3a5f",
+      "--text": "#e8f0fe",
+      "--muted": "#7fa4cc",
+      "--blue-main": "#0b63b7",
+      "--blue-mid": "#0a4a8f",
+      "--blue-dark": "#072f6b",
+    };
+
+    const applyVars = theme === "dark" ? darkVars : lightVars;
+    Object.keys(applyVars).forEach((k) => {
+      root.style.setProperty(k, applyVars[k]);
+    });
   }, [theme]);
 
   // Toggle theme
@@ -139,6 +199,7 @@ const Header = () => {
             <Link to="/stats">📊 My Stats</Link>
             <Link to="/leaderboard">🏆 Leaderboard</Link>
             <Link to="/my-batch">👥 My Batch</Link>
+            <Link to="/batches">👥 Batches</Link>
             <Link to="/profile">👤 Profile</Link>
           </nav>
           <button
@@ -187,6 +248,9 @@ const Header = () => {
         </Link>
         <Link to="/my-batch" onClick={closeMobileMenu}>
           👥 My Batch
+        </Link>
+        <Link to="/batches" onClick={closeMobileMenu}>
+          👥 Batches
         </Link>
         <Link to="/profile" onClick={closeMobileMenu}>
           👤 Profile

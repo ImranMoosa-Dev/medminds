@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { userRegister } from "../../api/authApi";
 
-const Signup = () => {
+const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -236,4 +236,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Register;

@@ -2,10 +2,10 @@ import axios from "../utils/AxiosConfig";
 
 const BASE_URL = process.env.REACT_APP_BASEURL;
 
-// get custom quiz by attemp id
+// get custom quiz details by attemp id
 export const getCustomQuizById = async (attemptId) => {
   const { data } = await axios.get(
-    `${BASE_URL}/api/v1/custom-quiz/${attemptId}`,
+    `${BASE_URL}/api/v1/custom-quiz/details/${attemptId}`,
   );
 
   return data;
@@ -38,7 +38,7 @@ export const startCustomQuiz = async (customAttemptId) => {
 // submit custom quiz
 export const submitCustomQuiz = async (attemptId, answers) => {
   const { data } = await axios.post(
-    `${BASE_URL}/api/v1/custom-quiz/submit/${attemptId}}`,
+    `${BASE_URL}/api/v1/custom-quiz/submit/${attemptId}`,
     { answers },
   );
   return data;
@@ -47,8 +47,14 @@ export const submitCustomQuiz = async (attemptId, answers) => {
 // save custom quiz progress
 export const saveCustomQuizProgress = async (attemptId, payload) => {
   const { data } = await axios.put(
-    `${BASE_URL}/api/v1/custom-quiz/save-progress/${attemptId}}`,
+    `${BASE_URL}/api/v1/custom-quiz/save-progress/${attemptId}`,
     { payload },
   );
+  return data;
+};
+
+// get all custom quiz attempts history
+export const getCustomQuizAttemptsHistory = async () => {
+  const { data } = await axios.get(`${BASE_URL}/api/v1/custom-quiz/history`);
   return data;
 };

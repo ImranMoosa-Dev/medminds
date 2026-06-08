@@ -1,45 +1,39 @@
 import { Router } from "express";
 import { requireSignIn } from "../middleware/authMiddleware.js";
 import {
-  createCustomTest,
-  getCustomResultController,
-  getCustomTestDetails,
-  saveCustomProgressController,
+  createCustomQuizController,
+  finalSubmitCustomQuizController,
+  getCustomQuizDetailsController,
+  getCustomQuizResultController,
+  saveCustomQuizProgressController,
   startCustomQuizController,
-  submitCustomQuizController,
-  submitCustomTest,
+  getCustomQuizAttemptsHistoryController,
 } from "../controllers/customQuizControllers.js";
 
 const customQuizRoutes = Router();
 
 // Create custom quiz
-customQuizRoutes.post("/create", requireSignIn, createCustomTest);
+customQuizRoutes.post("/create", requireSignIn, createCustomQuizController);
 
-// Get custom quiz details
-customQuizRoutes.get("/:attemptId", requireSignIn, getCustomTestDetails);
-
-// Submit custom quiz answers and calculate result
-customQuizRoutes.post("/submit/:id", requireSignIn, submitCustomTest);
-
-// Submit custom quiz
-customQuizRoutes.post(
-  "/submit/:attemptId",
+// Get custom quiz details by attempt ID
+customQuizRoutes.get(
+  "/details/:attemptId",
   requireSignIn,
-  submitCustomQuizController,
+  getCustomQuizDetailsController,
 );
 
 // Save custom quiz attempt's progress
 customQuizRoutes.put(
   "/save-progress/:attemptId",
   requireSignIn,
-  saveCustomProgressController,
+  saveCustomQuizProgressController,
 );
 
 // Get Custom Quiz Result
 customQuizRoutes.get(
   "/result/:attemptId",
   requireSignIn,
-  getCustomResultController,
+  getCustomQuizResultController,
 );
 
 // get quiz and other required details for starting custom quiz
@@ -53,7 +47,14 @@ customQuizRoutes.get(
 customQuizRoutes.post(
   "/submit/:attemptId",
   requireSignIn,
-  submitCustomQuizController,
+  finalSubmitCustomQuizController,
+);
+
+// 📋 Get all custom test attempts (history)
+customQuizRoutes.get(
+  "/history",
+  requireSignIn,
+  getCustomQuizAttemptsHistoryController,
 );
 
 export default customQuizRoutes;

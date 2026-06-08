@@ -49,3 +49,9 @@ export const getQuizResult = async (attemptId) => {
   );
   return data;
 };
+
+// get quiz history
+export const getQuizHistory = async () => {
+  const { data } = await axios.get(`${BASE_URL}/api/v1/quizzes/history`);
+  return data;
+};

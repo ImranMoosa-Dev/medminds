@@ -9,17 +9,11 @@ import { requireSignIn } from "../middleware/authMiddleware.js";
 
 const batchRoutes = Router();
 
-/*
-|--------------------------------------------------------------------------
-| PUBLIC / ADMIN ROUTES
-|--------------------------------------------------------------------------
-*/
-
 // Get all batches
-batchRoutes.get("/all", getAllBatchesController);
+batchRoutes.get("/all", requireSignIn, getAllBatchesController);
 
 // Get single batch with schedule
-batchRoutes.get("/:id", getSingleBatchController);
+batchRoutes.get("/:id", requireSignIn, getSingleBatchController);
 
 /*
 |--------------------------------------------------------------------------

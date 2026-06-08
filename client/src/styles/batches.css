@@ -645,7 +645,7 @@ body {
   cursor: not-allowed;
 }
 .btn-ghost {
-  background: #f3f4f6;
+  background: var(--card);
   color: var(--text);
   border: 1px solid #e5e7eb;
 }

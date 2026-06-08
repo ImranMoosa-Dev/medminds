@@ -1,9 +1,7 @@
 import db from "../config/MedMindsDB.js";
 
-// =====================================================
-// CREATE CUSTOM TEST
-// =====================================================
-export const createCustomTest = async (req, res) => {
+// ============== CREATE CUSTOM QUIZ
+export const createCustomQuizController = async (req, res) => {
   try {
     const { payload = {} } = req.body;
     const {
@@ -68,11 +66,9 @@ export const createCustomTest = async (req, res) => {
   }
 };
 
-// =====================================================
-// GET SINGLE CUSTOM TEST
-// ====================================================
+// ============== GET SINGLE CUSTOM QUIZ BY ATTEMPT ID
 
-export const getCustomTestDetails = async (req, res) => {
+export const getCustomQuizDetailsController = async (req, res) => {
   try {
     const { attemptId } = req.params;
     const userId = req.user.id;
@@ -124,130 +120,7 @@ export const getCustomTestDetails = async (req, res) => {
   }
 };
 
-// =====================================================
-// GET MY CUSTOM TESTS
-// =====================================================
-export const getMyCustomTests = async (req, res) => {
-  try {
-    const user_id = req.user.id;
-
-    const [rows] = await db.execute(
-      `
-      SELECT
-        id,
-        score,
-        total_questions,
-        percentage,
-        status,
-        duration_seconds,
-        time_taken_seconds,
-        submitted_at,
-        created_at
-      FROM custom_test_attempts
-      WHERE user_id = ?
-      ORDER BY created_at DESC
-      `,
-      [user_id],
-    );
-
-    res.status(200).json({
-      success: true,
-      data: rows,
-    });
-  } catch (error) {
-    console.error("Get My Custom Tests Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch custom test history.",
-    });
-  }
-};
-
-// =====================================================
-// SUBMIT CUSTOM TEST
-// =====================================================
-export const submitCustomTest = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { answers = {}, time_taken_seconds = 0 } = req.body;
-    const user_id = req.user.id;
-
-    const [rows] = await db.execute(
-      `
-      SELECT questions_json
-      FROM custom_test_attempts
-      WHERE id = ? AND user_id = ?
-      `,
-      [id, user_id],
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Custom test not found.",
-      });
-    }
-
-    const questions = JSON.parse(rows[0].questions_json);
-
-    let score = 0;
-
-    questions.forEach((q, index) => {
-      const userAnswer = answers[index];
-      if (Number(userAnswer) === Number(q.correct)) {
-        score++;
-      }
-    });
-
-    const total_questions = questions.length;
-    const percentage =
-      total_questions > 0 ? ((score / total_questions) * 100).toFixed(2) : 0;
-
-    await db.execute(
-      `
-      UPDATE custom_test_attempts
-      SET
-        answers = ?,
-        score = ?,
-        total_questions = ?,
-        percentage = ?,
-        time_taken_seconds = ?,
-        status = 'submitted',
-        submitted_at = NOW()
-      WHERE id = ? AND user_id = ?
-      `,
-      [
-        JSON.stringify(answers),
-        score,
-        total_questions,
-        percentage,
-        time_taken_seconds,
-        id,
-        user_id,
-      ],
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Custom test submitted successfully.",
-      result: {
-        score,
-        total_questions,
-        percentage,
-      },
-    });
-  } catch (error) {
-    console.error("Submit Custom Test Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to submit custom test.",
-    });
-  }
-};
-
-//  ==================
-// ==============START CUSTOM TEST CONTROLLERS
-// ==============================
+// ============== START CUSTOM QUIZ CONTROLLER
 
 export const startCustomQuizController = async (req, res) => {
   try {
@@ -305,8 +178,8 @@ export const startCustomQuizController = async (req, res) => {
   }
 };
 
-// save custom progress
-export const saveCustomProgressController = async (req, res) => {
+// ============== SAVE CUSTOM QUIZ PROGRESS CONTROLLER
+export const saveCustomQuizProgressController = async (req, res) => {
   try {
     const { attemptId } = req.params;
     const userId = req.user.id;
@@ -347,9 +220,120 @@ export const saveCustomProgressController = async (req, res) => {
   }
 };
 
-// get custom quiz result controller
+// ============== SUBMIT CUSTOM TEST AND CALCULATE RESULT
+export const finalSubmitCustomQuizController = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const userId = req.user.id;
 
-export const getCustomResultController = async (req, res) => {
+    // 1. fetch attempt
+    const [rows] = await db.execute(
+      `SELECT * FROM custom_test_attempts WHERE id = ? AND user_id = ?`,
+      [attemptId, userId],
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Attempt not found",
+      });
+    }
+
+    const attempt = rows[0];
+
+    const questions = JSON.parse(attempt.questions_json || "[]");
+
+    // Prefer answers sent in request body (frontend) but fall back to stored answers
+    const bodyAnswers = req.body?.answers || {};
+    const answers = Object.keys(bodyAnswers || {}).length
+      ? bodyAnswers
+      : JSON.parse(attempt.answers || "{}");
+
+    // 2. calculate score (normalize correct/given values)
+    let score = 0;
+
+    questions.forEach((q, i) => {
+      const userAnswer = answers[String(i)];
+      if (userAnswer === undefined || userAnswer === null) return;
+
+      // const correctRaw = q.correct_answer ?? q.correct;
+      const correct = String(q.correct_answer || "")
+        .toLowerCase()
+        .trim();
+
+      const given = String(userAnswer || "")
+        .toLowerCase()
+        .trim();
+
+      if (given === correct) {
+        score++;
+      }
+    });
+
+    const total_questions = questions.length;
+    const percentage =
+      total_questions > 0
+        ? Number(((score / total_questions) * 100).toFixed(2))
+        : 0;
+
+    // compute time taken if available
+    const bodyTimeTaken = req.body?.time_taken_seconds;
+    const time_taken_seconds =
+      typeof bodyTimeTaken === "number"
+        ? bodyTimeTaken
+        : attempt.duration_seconds && attempt.time_left != null
+          ? Math.max(attempt.duration_seconds - (attempt.time_left || 0), 0)
+          : attempt.time_taken_seconds || 0;
+
+    // 3. update DB with full result fields
+    await db.execute(
+      `UPDATE custom_test_attempts 
+         SET status = 'submitted',
+             score = ?,
+             answers = ?,
+             total_questions = ?,
+             percentage = ?,
+             time_taken_seconds = ?,
+             time_left = 0,
+             submitted_at = NOW()
+         WHERE id = ? AND user_id = ?`,
+      [
+        score,
+        JSON.stringify(answers || {}),
+        total_questions,
+        percentage,
+        time_taken_seconds,
+        attemptId,
+        userId,
+      ],
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Quiz submitted successfully",
+      result: {
+        score,
+        total_questions,
+        percentage,
+        time_taken_seconds,
+      },
+      score,
+      total_questions,
+      percentage,
+      time_taken_seconds,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Submission failed",
+    });
+  }
+};
+
+// ============== GET CUSTOM QUIZ RESULT CONTROLLER
+
+export const getCustomQuizResultController = async (req, res) => {
   try {
     const { attemptId } = req.params;
     const userId = req.user.id;
@@ -378,13 +362,6 @@ export const getCustomResultController = async (req, res) => {
     const questions = JSON.parse(attempt.questions_json || "[]");
     const answers = JSON.parse(attempt.answers || "{}");
 
-    const optionMap = {
-      1: "a",
-      2: "b",
-      3: "c",
-      4: "d",
-    };
-
     let correct = 0;
     let wrong = 0;
     let skipped = 0;
@@ -392,14 +369,11 @@ export const getCustomResultController = async (req, res) => {
     const reviewData = questions.map((q, index) => {
       const given = answers[index] || null;
 
-      const correctAnswer =
-        optionMap[q.correct] ||
-        optionMap[Number(q.correct)] ||
-        String(q.correct).toLowerCase();
+      const correctAnswer = String(q.correct_answer || "").toLowerCase();
 
       let status = "unattempted";
 
-      if (!given) {
+      if (given === null || given === undefined) {
         skipped++;
       } else if (
         String(given).toLowerCase() === String(correctAnswer).toLowerCase()
@@ -424,23 +398,16 @@ export const getCustomResultController = async (req, res) => {
 
           correct_answer: correctAnswer,
 
+          option_a: q.option_a || null,
+          option_b: q.option_b || null,
+          option_c: q.option_c || null,
+          option_d: q.option_d || null,
+
           options: [
-            {
-              key: "a",
-              text: q.opt1,
-            },
-            {
-              key: "b",
-              text: q.opt2,
-            },
-            {
-              key: "c",
-              text: q.opt3,
-            },
-            {
-              key: "d",
-              text: q.opt4,
-            },
+            { key: "a", text: q.option_a },
+            { key: "b", text: q.option_b },
+            { key: "c", text: q.option_c },
+            { key: "d", text: q.option_d },
           ],
         },
       };
@@ -496,61 +463,93 @@ export const getCustomResultController = async (req, res) => {
   }
 };
 
-// submit custom quiz controller
-export const submitCustomQuizController = async (req, res) => {
+// ============== GET ALL CUSTOM QUIZ ATTMEPTS HISTORY CONTROLLER
+
+export const getCustomQuizAttemptsHistoryController = async (req, res) => {
   try {
-    const { attemptId } = req.params;
     const userId = req.user.id;
 
-    // 1. fetch attempt
+    // 1️⃣ Fetch all attempts for user
     const [rows] = await db.execute(
-      `SELECT * FROM custom_test_attempts WHERE id = ? AND user_id = ?`,
-      [attemptId, userId],
+      `
+      SELECT *
+      FROM custom_test_attempts
+      WHERE user_id = ?
+      ORDER BY created_at DESC
+      `,
+      [userId],
     );
 
-    if (!rows.length) {
-      return res.status(404).json({
-        success: false,
-        message: "Attempt not found",
-      });
-    }
+    const attempts = rows || [];
 
-    const attempt = rows[0];
+    // 2️⃣ Calculate summary stats
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    let totalWrong = 0;
 
-    const questions = JSON.parse(attempt.questions_json || "[]");
-    const answers = JSON.parse(attempt.answers || "{}");
+    const formatted = attempts.map((a) => {
+      const answers = a.answers ? JSON.parse(a.answers) : {};
+      const answered = Object.keys(answers).length;
 
-    // 2. calculate score
-    let score = 0;
+      const score = a.score || 0;
+      const total = a.total_questions || 0;
 
-    questions.forEach((q, i) => {
-      if (answers[String(i)] === q.correct_answer) {
-        score++;
-      }
+      const wrong = answered - score;
+      const skipped = total - answered;
+
+      // accumulate summary
+      totalQuestions += answered;
+      totalCorrect += score;
+      totalWrong += wrong;
+
+      return {
+        id: a.id,
+        subjects: JSON.parse(a.selected_subject_ids || "[]"),
+        topics: JSON.parse(a.selected_topic_ids || "[]"),
+        subtopics: JSON.parse(a.selected_subtopic_ids || "[]"),
+        questions: JSON.parse(a.questions_json || "[]"),
+        answers,
+        score,
+        total,
+        percentage: a.percentage,
+        status: a.status,
+        created_at: a.created_at,
+        started_at: a.started_at,
+        submitted_at: a.submitted_at,
+        current_question: a.current_question,
+        time_left: a.time_left,
+        duration_seconds: a.duration_seconds,
+
+        // UI computed fields
+        answered,
+        wrong,
+        skipped,
+      };
     });
-
-    // 3. update DB
-    await db.execute(
-      `UPDATE custom_test_attempts 
-       SET status = 'completed',
-           score = ?,
-           answers = ?,
-           time_left = 0
-       WHERE id = ? AND user_id = ?`,
-      [score, JSON.stringify(answers), attemptId, userId],
-    );
 
     return res.status(200).json({
       success: true,
-      message: "Quiz submitted successfully",
-      score,
-      total: questions.length,
+      message: "Custom quiz attempts history fetched successfully",
+
+      attempts: formatted,
+
+      summary: {
+        totalTests: attempts.length,
+        totalQuestions,
+        totalCorrect,
+        totalWrong,
+      },
+
+      meta: {
+        completed: attempts.filter((a) => a.status === "submitted").length,
+      },
     });
   } catch (error) {
-    console.error(error);
+    console.error("getCustomTestHistoryController error:", error);
     return res.status(500).json({
       success: false,
-      message: "Submission failed",
+      message: "Failed to load custom test history",
+      error: error.message,
     });
   }
 };

@@ -103,40 +103,81 @@ const seedQuestions = async () => {
         topic_id: introBioTopicId,
         subtopic_id: branchesSubtopicId,
         quiz_id: getQuizId(biologyId, introBioTopicId),
+
         question: "Botany is the branch of biology that deals with:",
-        opt1: "Animals",
-        opt2: "Plants",
-        opt3: "Microorganisms",
-        opt4: "Human body",
-        correct: 2,
+        option_a: "Animals",
+        option_b: "Plants",
+        option_c: "Microorganisms",
+        option_d: "Human body",
+
+        correct_answer: "b",
         explanation: "Botany is the study of plants.",
       },
+
+      {
+        subject_id: biologyId,
+        topic_id: introBioTopicId,
+        subtopic_id: branchesSubtopicId,
+        quiz_id: getQuizId(biologyId, introBioTopicId),
+
+        question: "Zoology is the study of:",
+        option_a: "Plants",
+        option_b: "Animals",
+        option_c: "Cells",
+        option_d: "Fungi",
+
+        correct_answer: "b",
+        explanation: "Zoology is the branch of biology that studies animals.",
+      },
+
       {
         subject_id: chemistryId,
         topic_id: atomicStructureTopicId,
         subtopic_id: isotopesSubtopicId,
         quiz_id: getQuizId(chemistryId, atomicStructureTopicId),
+
         question:
           "Atoms of the same element having different mass numbers are called:",
-        opt1: "Ions",
-        opt2: "Compounds",
-        opt3: "Isotopes",
-        opt4: "Molecules",
-        correct: 3,
+        option_a: "Ions",
+        option_b: "Compounds",
+        option_c: "Isotopes",
+        option_d: "Molecules",
+
+        correct_answer: "c",
         explanation:
           "Isotopes have the same atomic number but different mass numbers.",
       },
+
+      {
+        subject_id: chemistryId,
+        topic_id: atomicStructureTopicId,
+        subtopic_id: isotopesSubtopicId,
+        quiz_id: getQuizId(chemistryId, atomicStructureTopicId),
+
+        question: "The atomic number represents:",
+        option_a: "Neutrons",
+        option_b: "Mass number",
+        option_c: "Electrons only",
+        option_d: "Number of protons",
+
+        correct_answer: "d",
+        explanation:
+          "Atomic number equals the number of protons present in the nucleus.",
+      },
+
       {
         subject_id: physicsId,
         topic_id: motionTopicId,
         subtopic_id: newtonSubtopicId,
         quiz_id: getQuizId(physicsId, motionTopicId),
+
         question: "Newton's First Law is also known as:",
-        opt1: "Law of Gravitation",
-        opt2: "Law of Inertia",
-        opt3: "Law of Acceleration",
-        opt4: "Law of Momentum",
-        correct: 2,
+        option_a: "Law of Gravitation",
+        option_b: "Law of Inertia",
+        option_c: "Law of Acceleration",
+        option_d: "Law of Momentum",
+
+        correct_answer: "b",
         explanation: "Newton's First Law is called the Law of Inertia.",
       },
     ];
@@ -169,11 +210,11 @@ const seedQuestions = async () => {
           topic_id,
           subtopic_id,
           question,
-          opt1,
-          opt2,
-          opt3,
-          opt4,
-          correct,
+          option_a,
+          option_b,
+          option_c,
+          option_d,
+          correct_answer,
           explanation,
           image,
           is_published
@@ -186,11 +227,11 @@ const seedQuestions = async () => {
           q.topic_id,
           q.subtopic_id || null,
           q.question,
-          q.opt1,
-          q.opt2,
-          q.opt3,
-          q.opt4,
-          q.correct,
+          q.option_a,
+          q.option_b,
+          q.option_c,
+          q.option_d,
+          q.correct_answer,
           q.explanation,
           null,
           true,

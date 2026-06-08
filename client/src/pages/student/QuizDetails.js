@@ -74,13 +74,16 @@ export default function QuizDetails() {
 
   const startQuiz = () => {
     localStorage.setItem("selectedQuizId", quiz?.id || quiz?.[0]?.id);
+    localStorage.removeItem("isCustomTest");
+    localStorage.removeItem("customTestAttemptId");
+
     navigate("/quiz");
   };
 
   const startCustomTest = () => {
     localStorage.setItem("isCustomTest", "1");
     localStorage.setItem("customTestAttemptId", customAttempt.id);
-    // localStorage.removeItem("selectedQuizId");
+    localStorage.removeItem("selectedQuizId");
     navigate("/quiz");
   };
 
@@ -245,10 +248,7 @@ function CustomTestView({ attempt, onStart, onBack }) {
     );
 
   return (
-    <div
-      className="container"
-      style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}
-    >
+    <div className="container" style={{ margin: "0 auto", padding: 20 }}>
       <Header
         title="📚 Quiz Details"
         subtitle="Review the quiz information before you start"
@@ -348,10 +348,7 @@ function QuizView({
     : "--";
 
   return (
-    <div
-      className="container"
-      style={{ maxWidth: 900, margin: "0 auto", padding: 20 }}
-    >
+    <div className="container" style={{ margin: "0 auto", padding: 20 }}>
       <Header
         title="📚 Quiz Details"
         subtitle="Review the quiz information before you start"

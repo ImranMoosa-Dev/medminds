@@ -123,7 +123,6 @@ export const createQuizController = async (req, res) => {
 };
 
 // get quiz and other required details for starting custom quiz
-
 export const startQuizController = async (req, res) => {
   try {
     const { quizId } = req.params;
@@ -167,13 +166,13 @@ export const startQuizController = async (req, res) => {
       SELECT
         id,
         question,
-        opt1 AS option_a,
-        opt2 AS option_b,
-        opt3 AS option_c,
-        opt4 AS option_d,
-        correct,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct_answer,
         explanation,
-        image
+        image 
       FROM questions
       WHERE quiz_id = ?
       ORDER BY id ASC
@@ -197,7 +196,7 @@ export const startQuizController = async (req, res) => {
       FROM quiz_attempts
       WHERE user_id = ?
       AND quiz_id = ?
-      AND completed = 0
+      AND attempt_status != 'submitted'
       ORDER BY id DESC
       LIMIT 1
       `,
@@ -224,7 +223,7 @@ export const startQuizController = async (req, res) => {
     answers,
     current_question,
     time_left,
-    completed
+    attempt_status
   )
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
@@ -237,7 +236,7 @@ export const startQuizController = async (req, res) => {
           JSON.stringify({}),
           0,
           initialTime, // ✅ FIXED
-          false,
+          "in_progress",
         ],
       );
 
@@ -338,7 +337,7 @@ export const saveQuizProgressController = async (req, res) => {
   }
 };
 
-// submit quiz controller
+// submit quiz controller and calculate result
 export const submitQuizController = async (req, res) => {
   try {
     const { attemptId } = req.params;
@@ -358,39 +357,22 @@ export const submitQuizController = async (req, res) => {
 
     const questions = JSON.parse(rows[0].questions_json || "[]");
 
-    // collect question ids and fetch correct answers from questions table
-    const qIds = questions.map((q) => q.id).filter(Boolean);
-    let correctMap = {};
-
-    if (qIds.length) {
-      const placeholders = qIds.map(() => "?").join(",");
-      const [qrows] = await db.execute(
-        `SELECT id, correct FROM questions WHERE id IN (${placeholders})`,
-        qIds,
-      );
-
-      qrows.forEach((r) => {
-        correctMap[r.id] = Number(r.correct);
-      });
-    }
-
-    const optToNum = { a: 1, b: 2, c: 3, d: 4 };
-
     let score = 0;
 
-    questions.forEach((q, i) => {
-      const given = answers[String(i)];
-      const givenNum = given ? optToNum[String(given).toLowerCase()] : null;
-      const correctNum = correctMap[q.id] || null;
+    questions.forEach((q, index) => {
+      const correct = String(q.correct_answer).toLowerCase();
+      const given = answers[String(index)];
 
-      if (givenNum && correctNum && givenNum === correctNum) score++;
+      if (given && String(given).toLowerCase() === correct) {
+        score++;
+      }
     });
 
     const total = questions.length;
     const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 
     await db.execute(
-      `UPDATE quiz_attempts SET answers = ?, score = ?, total_questions = ?, percentage = ?, time_left = 0, completed = 1, attempt_status = 'submitted', submitted_at = NOW() WHERE id = ? AND user_id = ?`,
+      `UPDATE quiz_attempts SET answers = ?, score = ?, total_questions = ?, percentage = ?, time_left = 0, attempt_status = 'submitted', submitted_at = NOW() WHERE id = ? AND user_id = ?`,
       [JSON.stringify(answers), score, total, percentage, attemptId, userId],
     );
 
@@ -434,15 +416,6 @@ export const getQuizResultController = async (req, res) => {
     const attempt = rows[0];
     const questions = JSON.parse(attempt.questions_json || "[]");
     const answers = JSON.parse(attempt.answers || "{}");
-    console.log("questions_json:", questions);
-    console.log("answers:", answers);
-
-    const optionMap = {
-      1: "a",
-      2: "b",
-      3: "c",
-      4: "d",
-    };
 
     let correct = 0;
     let wrong = 0;
@@ -451,14 +424,12 @@ export const getQuizResultController = async (req, res) => {
     const reviewData = questions.map((q, index) => {
       const given = answers[String(index)] || null;
       const correctAnswer =
-        q.correct != null
-          ? optionMap[q.correct] || String(q.correct).toLowerCase()
-          : q.correct_answer
-            ? String(q.correct_answer).toLowerCase()
-            : null;
+        q.correct_answer != null
+          ? String(q.correct_answer).toLowerCase()
+          : null;
       let status = "unattempted";
 
-      if (!given) {
+      if (given === null || given === undefined) {
         skipped++;
       } else if (
         correctAnswer &&
@@ -473,7 +444,7 @@ export const getQuizResultController = async (req, res) => {
 
       return {
         i: index,
-        given,
+        given: given || null,
         status,
         q: {
           id: q.id,
@@ -481,15 +452,16 @@ export const getQuizResultController = async (req, res) => {
           image: q.image || null,
           explanation: q.explanation || "",
           correct_answer: correctAnswer,
-          option_a: q.option_a || q.opt1 || null,
-          option_b: q.option_b || q.opt2 || null,
-          option_c: q.option_c || q.opt3 || null,
-          option_d: q.option_d || q.opt4 || null,
+
+          option_a: q.option_a || null,
+          option_b: q.option_b || null,
+          option_c: q.option_c || null,
+          option_d: q.option_d || null,
           options: [
-            { key: "a", text: q.option_a || q.opt1 || null },
-            { key: "b", text: q.option_b || q.opt2 || null },
-            { key: "c", text: q.option_c || q.opt3 || null },
-            { key: "d", text: q.option_d || q.opt4 || null },
+            { key: "a", text: q.option_a || null },
+            { key: "b", text: q.option_b || null },
+            { key: "c", text: q.option_c || null },
+            { key: "d", text: q.option_d || null },
           ],
         },
       };
@@ -500,8 +472,13 @@ export const getQuizResultController = async (req, res) => {
       attempt.percentage != null
         ? Number(attempt.percentage)
         : total > 0
-          ? Math.round(((attempt.score || 0) / total) * 100)
+          ? Number(((correct / total) * 100).toFixed(2))
           : 0;
+
+    const timeTaken =
+      attempt.duration_seconds && attempt.time_left != null
+        ? Math.max(attempt.duration_seconds - attempt.time_left, 0)
+        : attempt.time_taken_seconds || 0;
 
     return res.status(200).json({
       success: true,
@@ -511,24 +488,25 @@ export const getQuizResultController = async (req, res) => {
         name: attempt.fullName || "Student",
         quiz: "Quiz",
         pct,
-        fraction: `${attempt.score || 0} / ${attempt.total_questions || total} marks obtained`,
+        fraction: `${correct} / ${total} marks obtained`,
         correct,
         wrong,
         skipped,
       },
+
       result: {
         id: attempt.id,
         score: attempt.score || 0,
         total: attempt.total_questions || total,
         percentage: pct,
-        status:
-          attempt.attempt_status ||
-          (attempt.completed ? "submitted" : "pending"),
+        status: attempt.attempt_status || "pending",
+
         duration_seconds: attempt.duration_seconds,
         time_taken_seconds: attempt.duration_seconds - (attempt.time_left || 0),
         started_at: attempt.started_at,
         submitted_at: attempt.submitted_at,
       },
+
       reviewData,
     });
   } catch (error) {
@@ -536,5 +514,75 @@ export const getQuizResultController = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Error fetching result" });
+  }
+};
+
+// get quiz history
+export const getQuizHistoryController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [attempts] = await db.execute(
+      `
+      SELECT
+        qa.id,
+        qa.quiz_id,
+        qa.score,
+        qa.total_questions,
+        qa.percentage,
+        qa.submitted_at,
+        q.name AS quiz_name
+      FROM quiz_attempts qa
+      LEFT JOIN quizzes q
+        ON qa.quiz_id = q.id
+      WHERE qa.user_id = ?
+        AND qa.attempt_status = 'submitted'
+      ORDER BY qa.submitted_at DESC
+      `,
+      [userId],
+    );
+
+    const totalAttempts = attempts.length;
+
+    const bestPercentage =
+      totalAttempts > 0
+        ? Math.max(...attempts.map((a) => Number(a.percentage)))
+        : 0;
+
+    const avgPercentage =
+      totalAttempts > 0
+        ? Math.round(
+            attempts.reduce((sum, a) => sum + Number(a.percentage), 0) /
+              totalAttempts,
+          )
+        : 0;
+
+    const history = attempts.map((a) => ({
+      attemptId: a.id,
+      quizId: a.quiz_id,
+      quizName: a.quiz_name || `Quiz #${a.quiz_id}`,
+      score: a.score,
+      totalQuestions: a.total_questions,
+      percentage: Number(a.percentage),
+      submittedAt: a.submitted_at,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        attempts: totalAttempts,
+        best: bestPercentage,
+        avg: avgPercentage,
+      },
+      history,
+    });
+  } catch (error) {
+    console.log("getQuizHistoryController Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching quiz history",
+      error: error.message,
+    });
   }
 };

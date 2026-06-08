@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import supabase from "../utils/SupabaseClient";
-import { useAuth } from "../context/auth";
-import "../styles/batches.css";
+import { getAllBatchesApi } from "../../api/batchApi";
+import {
+  createEnrollmentRequest,
+  getMyEnrollmentRequestStatusApi,
+} from "../../api/enrollmentReqApi";
+import { useAuth } from "../../context/auth";
+import "../../styles/batches.css";
 
 const GRADIENTS = [
   ["#0b63b7", "#0a4a8f"],
@@ -27,25 +31,13 @@ const Batches = () => {
   useEffect(() => {
     document.title = "Batch Enrollment — MedMinds";
 
-    if (!auth?.user) {
-      navigate("/login");
-      return;
-    }
-
-    // Listen to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (evt, session) => {
-        if (evt === "SIGNED_IN" && session && !currentUserRef.current) init();
-      },
-    );
-
     init();
 
     // Expose selectBatch on window for inline onclick in dynamic HTML
     window.__batches_selectBatch = (id, name) => selectBatch(id, name);
 
     return () => {
-      authListener?.subscription?.unsubscribe?.();
+      // authListener?.subscription?.unsubscribe?.();
       delete window.__batches_selectBatch;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,43 +45,17 @@ const Batches = () => {
 
   async function init() {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      currentUserRef.current = auth.user;
+      userDataRef.current = auth.user;
 
-      if (user) {
-        currentUserRef.current = user;
-        const { data, error } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        userDataRef.current = error
-          ? {
-              id: user.id,
-              email: user.email,
-              first_name: "",
-              last_name: "",
-              phone: null,
-            }
-          : data;
-      } else {
-        window.location.href = "index.html";
-        return;
-      }
+      const name = auth.user.fullName || "Student";
 
-      const userData = userDataRef.current;
-      const name =
-        (
-          (userData.first_name || "") +
-          " " +
-          (userData.last_name || "")
-        ).trim() || "Student";
       const hdrName = document.getElementById("hdrName");
       const hdrEmail = document.getElementById("hdrEmail");
       const hdrUser = document.getElementById("hdrUser");
+
       if (hdrName) hdrName.textContent = name;
-      if (hdrEmail) hdrEmail.textContent = userData.email || user.email;
+      if (hdrEmail) hdrEmail.textContent = auth.user.email;
       if (hdrUser) hdrUser.style.display = "flex";
 
       await checkEnrollmentStatus(name);
@@ -102,84 +68,55 @@ const Batches = () => {
 
   async function checkEnrollmentStatus(displayName) {
     try {
-      const { data: userRow } = await supabase
-        .from("users")
-        .select("batch_id")
-        .eq("id", currentUserRef.current.id)
-        .single();
+      // First check if user is already enrolled in a batch
+      const data = await getMyEnrollmentRequestStatusApi();
 
-      if (userRow?.batch_id) {
-        const { data: batch } = await supabase
-          .from("batches")
-          .select("name")
-          .eq("id", userRow.batch_id)
-          .single();
-        const batchName = batch?.name || "Your Batch";
+      if (data.status === "approved") {
+        document.getElementById("approvedName").textContent = displayName;
 
-        const approvedName = document.getElementById("approvedName");
-        const approvedBatchTitle =
-          document.getElementById("approvedBatchTitle");
-        const approvedBatchName = document.getElementById("approvedBatchName");
-        if (approvedName) approvedName.textContent = displayName;
-        if (approvedBatchTitle) approvedBatchTitle.textContent = batchName;
-        if (approvedBatchName) approvedBatchName.textContent = batchName;
+        document.getElementById("approvedBatchTitle").textContent =
+          data.batch.name;
+
+        document.getElementById("approvedBatchName").textContent =
+          data.batch.name;
+
         showScreen("screenApproved");
         return;
       }
 
-      const { data: req } = await supabase
-        .from("enrollment_requests")
-        .select("*")
-        .eq("user_id", currentUserRef.current.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+      if (data.request) {
+        const req = data.request;
 
-      if (req) {
-        if (req.approval_status === "pending") {
-          const { data: batch } = await supabase
-            .from("batches")
-            .select("name")
-            .eq("id", req.batch_id)
-            .single();
-          const batchName = batch?.name || "Selected Batch";
-          const submittedDate = new Date(req.created_at).toLocaleDateString(
-            "en-GB",
-            { day: "numeric", month: "short", year: "numeric" },
-          );
+        if (req.status === "pending") {
+          document.getElementById("pendingName").textContent = displayName;
 
-          const pendingName = document.getElementById("pendingName");
-          const pendingBatch = document.getElementById("pendingBatch");
-          const pendingBatchPill = document.getElementById("pendingBatchPill");
-          const pendingDate = document.getElementById("pendingDate");
-          if (pendingName) pendingName.textContent = displayName;
-          if (pendingBatch) pendingBatch.textContent = batchName;
-          if (pendingBatchPill) pendingBatchPill.textContent = batchName;
-          if (pendingDate)
-            pendingDate.textContent = "Submitted " + submittedDate;
+          document.getElementById("pendingBatch").textContent = req.batch_name;
+
+          document.getElementById("pendingBatchPill").textContent =
+            req.batch_name;
+
+          document.getElementById("pendingDate").textContent =
+            "Submitted " + formatDate(req.created_at);
+
           showScreen("screenPending");
           return;
         }
 
-        if (
-          req.approval_status === "denied" ||
-          req.approval_status === "rejected"
-        ) {
-          const deniedName = document.getElementById("deniedName");
-          if (deniedName) deniedName.textContent = displayName;
+        if (req.status === "rejected" || req.status === "denied") {
+          document.getElementById("deniedName").textContent = displayName;
+
           showScreen("screenDenied");
           return;
         }
       }
 
       hideLoader();
-      const step1 = document.getElementById("step1");
-      if (step1) step1.style.display = "block";
+      show("step1", true);
       await loadBatches();
-    } catch (e) {
+    } catch (error) {
+      console.log(error);
       hideLoader();
-      const step1 = document.getElementById("step1");
-      if (step1) step1.style.display = "block";
+      show("step1", true);
       await loadBatches();
     }
   }
@@ -188,13 +125,13 @@ const Batches = () => {
     const grid = document.getElementById("batchesGrid");
     if (!grid) return;
     try {
-      const { data, error } = await supabase
-        .from("batches")
-        .select("id, name, description, start_date, end_date")
-        .order("name", { ascending: true });
-      if (error) throw error;
+      // GET ALL BATCHES API
+      const data = await getAllBatchesApi();
 
-      if (!data?.length) {
+      const batches = data.batches;
+      // if (error) throw error;
+
+      if (!batches?.length) {
         grid.innerHTML = `
           <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)">
             <div style="font-size:52px;margin-bottom:16px">📭</div>
@@ -204,7 +141,7 @@ const Batches = () => {
         return;
       }
 
-      grid.innerHTML = data
+      grid.innerHTML = batches
         .map((b, i) => {
           const [from, to] = GRADIENTS[i % GRADIENTS.length];
           const desc = (
@@ -299,66 +236,47 @@ const Batches = () => {
     document.getElementById("submitText").textContent = "Submitting…";
     document.getElementById("submitSpin").style.display = "inline-block";
 
+    const payload = {
+      batch_id: selectedBatchIdRef.current,
+      father_name: fatherName,
+      district,
+      status,
+    };
     try {
-      const { data: existing } = await supabase
-        .from("enrollment_requests")
-        .select("id")
-        .eq("user_id", currentUserRef.current.id)
-        .limit(1);
-      if (existing?.length) {
-        showToast("You already have a pending enrollment request.", "info");
-        btn.disabled = false;
-        document.getElementById("submitText").textContent = "Submit Request";
-        document.getElementById("submitSpin").style.display = "none";
-        return;
-      }
-
-      const { error } = await supabase.from("enrollment_requests").insert([
-        {
-          user_id: currentUserRef.current.id,
-          batch_id: selectedBatchIdRef.current,
-          father_name: fatherName,
-          district,
-          status,
-          approval_status: "pending",
-          created_at: new Date().toISOString(),
-        },
-      ]);
-      if (error) throw error;
+      // Create enrollment request api
+      await createEnrollmentRequest(payload);
 
       pill("sPill2", "done", "✓");
       line("sLine2", true);
       pill("sPill3", "active");
+
       const sPill3 = document.getElementById("sPill3");
+
       if (sPill3) sPill3.style.opacity = "1";
 
       show("step2", false);
       show("stepsBar", false);
       show("pageHero", false);
 
-      const userData = userDataRef.current;
-      const name =
-        (
-          (userData.first_name || "") +
-          " " +
-          (userData.last_name || "")
-        ).trim() || "there";
-      document.getElementById("pendingName").textContent = name;
+      document.getElementById("pendingName").textContent =
+        auth?.user?.fullName || "Student";
+
       document.getElementById("pendingBatch").textContent =
         selectedBatchNameRef.current;
+
       document.getElementById("pendingBatchPill").textContent =
         selectedBatchNameRef.current;
+
       document.getElementById("pendingDate").textContent = "Submitted today";
 
       showScreen("screenPending");
-      showToast("✅ Request submitted successfully!", "success");
-      scrollTop();
-    } catch (e) {
-      console.error(e);
-      showToast(e.message || "Failed to submit. Please try again.", "error");
-      btn.disabled = false;
-      document.getElementById("submitText").textContent = "Submit Request";
-      document.getElementById("submitSpin").style.display = "none";
+
+      showToast("Request submitted successfully", "success");
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to submit request",
+        "error",
+      );
     }
   }
 
@@ -421,11 +339,6 @@ const Batches = () => {
 
   return (
     <>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&family=DM+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
-
       {/* ══ HEADER ══ */}
       <header className="hdr">
         <div className="hdr-inner">
@@ -621,7 +534,7 @@ const Batches = () => {
             </div>
 
             <div className="state-btns">
-              <a href="quiz-selection.html" className="btn-cta-ghost">
+              <a href="quiz-selection" className="btn-cta-ghost">
                 ← Back to Quizzes
               </a>
             </div>
@@ -692,7 +605,7 @@ const Batches = () => {
             </div>
 
             <div className="state-btns">
-              <a href="quiz-selection.html" className="btn-cta">
+              <a href="quiz-selection" className="btn-cta">
                 Start Quizzes
                 <svg
                   width="16"
@@ -705,7 +618,7 @@ const Batches = () => {
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </a>
-              <a href="my-batch.html" className="btn-cta-ghost">
+              <a href="my-batch" className="btn-cta-ghost">
                 📅 My Batch Schedule
               </a>
             </div>
@@ -739,7 +652,7 @@ const Batches = () => {
               >
                 💬 Contact on WhatsApp
               </a>
-              <a href="quiz-selection.html" className="btn-cta-ghost">
+              <a href="quiz-selection" className="btn-cta-ghost">
                 ← Back to Home
               </a>
             </div>

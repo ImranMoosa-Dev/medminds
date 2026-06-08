@@ -13,7 +13,6 @@ export const getAllBatchesController = async (req, res) => {
         id,
         name,
         description,
-        academic_year,
         start_date,
         end_date,
         created_at
@@ -137,9 +136,15 @@ export const getMyBatchController = async (req, res) => {
     const user = userRows[0];
 
     if (!user.batch_id) {
-      return res.status(404).send({
-        success: false,
-        message: "No batch assigned",
+      return res.status(200).send({
+        success: true,
+        batch: null,
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          batch_id: null,
+        },
+        schedule: [],
       });
     }
 
@@ -165,9 +170,15 @@ export const getMyBatchController = async (req, res) => {
     );
 
     if (batchRows.length === 0) {
-      return res.status(404).send({
-        success: false,
-        message: "Batch not found",
+      return res.status(200).send({
+        success: true,
+        batch: null,
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          batch_id: null,
+        },
+        schedule: [],
       });
     }
 
@@ -196,7 +207,13 @@ export const getMyBatchController = async (req, res) => {
     return res.status(200).send({
       success: true,
 
-      batch: batchRows[0],
+      batch: {
+        id: batchRows[0].id,
+        name: batchRows[0].name,
+        description: batchRows[0].description,
+        start_date: batchRows[0].start_date,
+        end_date: batchRows[0].end_date,
+      },
 
       user: {
         id: user.id,
