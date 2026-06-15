@@ -233,3 +233,139 @@ export const getMyBatchController = async (req, res) => {
     });
   }
 };
+
+/*
+|--------------------------------------------------------------------------
+| CREATE BATCH
+|--------------------------------------------------------------------------
+*/
+export const createBatchController = async (req, res) => {
+  try {
+    const { name, description, start_date, end_date } = req.body;
+    if (!name) {
+      return res.status(400).send({ success: false, message: "Name is required" });
+    }
+    const [result] = await db.execute(
+      `INSERT INTO batches (name, description, start_date, end_date, is_active) VALUES (?, ?, ?, ?, TRUE)`,
+      [name, description || "", start_date || null, end_date || null]
+    );
+    return res.status(201).send({
+      success: true,
+      message: "Batch created successfully",
+      batch: {
+        id: result.insertId,
+        name,
+        description,
+        start_date,
+        end_date,
+        is_active: true
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      message: "Error creating batch",
+      error: error.message
+    });
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| DELETE BATCH
+|--------------------------------------------------------------------------
+*/
+export const deleteBatchController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Unassign students from this batch first
+    await db.execute(`UPDATE users SET batch_id = NULL WHERE batch_id = ?`, [id]);
+    // Delete batch
+    const [result] = await db.execute(`DELETE FROM batches WHERE id = ?`, [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).send({ success: false, message: "Batch not found" });
+    }
+    return res.status(200).send({
+      success: true,
+      message: "Batch deleted successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      message: "Error deleting batch",
+      error: error.message
+    });
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| TOGGLE BATCH STATUS
+|--------------------------------------------------------------------------
+*/
+export const toggleBatchStatusController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { is_active } = req.body;
+    const [result] = await db.execute(`UPDATE batches SET is_active = ? WHERE id = ?`, [
+      is_active ? 1 : 0,
+      id
+    ]);
+    if (result.affectedRows === 0) {
+      return res.status(404).send({ success: false, message: "Batch not found" });
+    }
+    return res.status(200).send({
+      success: true,
+      message: "Batch status updated successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      message: "Error updating batch status",
+      error: error.message
+    });
+  }
+};
+
+/*
+|--------------------------------------------------------------------------
+| UPLOAD BATCH SCHEDULE
+|--------------------------------------------------------------------------
+*/
+export const uploadBatchScheduleController = async (req, res) => {
+  try {
+    const { id } = req.params; // batch_id
+    const { schedule } = req.body; // array of { test_no, date, day, subject, chapter }
+
+    if (!Array.isArray(schedule)) {
+      return res.status(400).send({ success: false, message: "Schedule must be an array" });
+    }
+
+    // Delete existing schedules for this batch
+    await db.execute(`DELETE FROM batch_schedules WHERE batch_id = ?`, [id]);
+
+    // Insert new schedules
+    for (const r of schedule) {
+      await db.execute(
+        `INSERT INTO batch_schedules (batch_id, test_no, date, day, subject, chapter) VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, r.test_no, r.date, r.day, r.subject, r.chapter]
+      );
+    }
+
+    return res.status(200).send({
+      success: true,
+      message: "Schedule uploaded successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      message: "Error uploading schedule",
+      error: error.message
+    });
+  }
+};
+

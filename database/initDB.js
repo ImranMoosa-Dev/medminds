@@ -23,14 +23,14 @@ import {
 import { createNotificationsTable } from "./tables/notificationTables.js";
 
 const initDB = async () => {
+  // Create batches table (must be before users due to FK)
+  await createBatchesTable();
+
   // Create users table
   await createUsersTable();
 
   // Create login dates table
   await createLoginDatesTable();
-
-  // Create batches table
-  await createBatchesTable();
 
   // Create batch schedules table
   await createBatchSchedulesTable();
