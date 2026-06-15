@@ -20,8 +20,9 @@ import batchRoutes from "./routes/batchRoutes.js";
 import leaderboardRoutes from "./routes/leaderboardRoutes.js";
 import customQuizRoutes from "./routes/customQuizRoutes.js";
 import enrollmentReqRouter from "./routes/enrollmentReqRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
-// import adminRoutes from "./routes/adminRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 // import notesRoutes from "./routes/notesRoutes.js";
 
 // seeding files imports
@@ -77,7 +78,9 @@ app.use("/api/v1/batches", batchRoutes);
 app.use("/api/v1/leaderboard", leaderboardRoutes);
 app.use("/api/v1/custom-quiz", customQuizRoutes);
 app.use("/api/v1/enrollment-requests", enrollmentReqRouter);
-// app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/admin/users", userRoutes);
+
 // app.use("/api/v1/notes", notesRoutes);
 
 app.listen(PORT, () => {

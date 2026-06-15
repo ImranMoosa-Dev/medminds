@@ -28,11 +28,16 @@ const Login = () => {
           token: data.token,
         });
 
+        const email = data?.user?.email;
         localStorage.setItem("auth", JSON.stringify(data));
         setTimeout(() => {
           setLoading((prev) => ({ ...prev, form: false }));
           toast.success("Welcome Back!");
-          navigate("/quiz-selection");
+          if (email === "admin@gmail.com") {
+            navigate("/admin/dashboard");
+          } else {
+            navigate("/quiz-selection");
+          }
         }, 2000);
       }
     } catch (error) {

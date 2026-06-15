@@ -34,3 +34,11 @@ export const userRegister = async (
   });
   return data;
 };
+
+// Check User Authentication
+export const authCheckApi = async () => {
+  const { data } = await axios.get(
+    `${process.env.REACT_APP_BASEURL}/api/v1/auth/me`,
+  );
+  return data;
+};

@@ -1,39 +1,29 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 import "../../styles/admin-header.css";
 
 const AdminHeader = () => {
-  // ── TAB SWITCHER ─────────────────────────────────────────────────────────────
-  function switchTab(name) {
-    document
-      .querySelectorAll(".tab-panel")
-      .forEach((p) => p.classList.remove("active"));
-    document
-      .querySelectorAll(".tab-btn")
-      .forEach((b) => b.classList.remove("active"));
-    document.getElementById(name).classList.add("active");
-    document.querySelector(`[data-tab="${name}"]`)?.classList.add("active");
-    //   const loaders = {
-    //     users: loadAllUsers,
-    //     quizzes: () => {
-    //       loadAllQuizzes();
-    //       loadQuizzesForDropdown();
-    //     },
-    //     batches: () => {
-    //       loadAllBatches();
-    //       loadScheduleBatchSelect();
-    //     },
-    //     attempts: loadAllAttempts,
-    //     leadership: loadLeaderboard,
-    //     statistics: loadStatistics,
-    //     notifications: loadNotificationHistory,
-    //     subjects: () => {
-    //       loadSubjectsTab();
-    //       loadSubjectsTabEnhanced();
-    //     },
-    //     profile: loadAdminProfile,
-    //   };
-    //   loaders[name]?.();
-  }
+  //   const loaders = {
+  //     users: loadAllUsers,
+  //     quizzes: () => {
+  //       loadAllQuizzes();
+  //       loadQuizzesForDropdown();
+  //     },
+  //     batches: () => {
+  //       loadAllBatches();
+  //       loadScheduleBatchSelect();
+  //     },
+  //     attempts: loadAllAttempts,
+  //     leadership: loadLeaderboard,
+  //     statistics: loadStatistics,
+  //     notifications: loadNotificationHistory,
+  //     subjects: () => {
+  //       loadSubjectsTab();
+  //       loadSubjectsTabEnhanced();
+  //     },
+  //     profile: loadAdminProfile,
+  //   };
+  //   loaders[name]?.();
   return (
     <>
       {/* ═══════ HEADER ═══════ */}
@@ -43,6 +33,7 @@ const AdminHeader = () => {
             <div className="hdr-logo">🏥 MedMinds Admin</div>
             <div className="hdr-sub">Dashboard & Management</div>
           </div>
+
           <div className="hdr-right">
             <span id="adminEmail" className="hdr-email">
               Loading…
@@ -54,84 +45,84 @@ const AdminHeader = () => {
 
       {/* ═══════ NAV TABS ═══════ */}
       <nav className="tabs-nav" id="adminTabs">
-        <button
-          className="tab-btn active"
-          data-tab="dashboard"
-          onClick={() => switchTab("dashboard")}
+        <NavLink
+          to="/admin/dashboard"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           📊 Dashboard
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="users"
-          onClick={() => switchTab("users")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/users"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           👥 Users
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="quizzes"
-          onClick={() => switchTab("quizzes")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/quizzes"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           📝 Quizzes
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="batches"
-          onClick={() => switchTab("batches")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/batches"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           🗂 Batches
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="attempts"
-          onClick={() => switchTab("attempts")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/results"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           📋 Results
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="leadership"
-          onClick={() => switchTab("leadership")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/leaderboard"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           🏆 Leaderboard
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="statistics"
-          onClick={() => switchTab("statistics")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/statistics"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           📈 Statistics
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="notifications"
-          onClick={() => switchTab("notifications")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/notifications"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           🔔 Notifications
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="subjects"
-          onClick={() => switchTab("subjects")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/subjects"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           📚 Subjects
-        </button>
-        <button
-          className="tab-btn"
-          data-tab="profile"
-          onClick={() => switchTab("profile")}
+        </NavLink>
+
+        <NavLink
+          to="/admin/profile"
+          className={({ isActive }) => `tab-btn ${isActive ? "active" : ""}`}
         >
           👤 Profile
-        </button>
-        <button
-          className="tab-btn tab-btn-enroll"
-          onClick={() => {
-            // navigate("/enrollment-admin");
-          }}
+        </NavLink>
+
+        <NavLink
+          to="/admin/enrollments"
+          className={({ isActive }) =>
+            `tab-btn tab-btn-enroll ${isActive ? "active" : ""}`
+          }
         >
           📋 Enrollments
-        </button>
+        </NavLink>
       </nav>
     </>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/auth";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
-import axios from "../../utils/AxiosConfig";
+import { authCheckApi } from "../../api/authApi";
 import Spinner from "../../utils/Spinner";
 
 export default function StudentPrivateRoute() {
@@ -14,10 +14,7 @@ export default function StudentPrivateRoute() {
     if (authLoading) return;
     const authCheck = async () => {
       try {
-        const { data } = await axios.get(
-          `${process.env.REACT_APP_BASEURL}/api/v1/auth/me`,
-        );
-
+        const data = await authCheckApi();
         if (data?.ok) {
           setOk(true); // true if normal user
         } else {

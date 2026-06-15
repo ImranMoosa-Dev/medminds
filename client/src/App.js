@@ -27,6 +27,12 @@ import Batches from "./pages/student/Batches";
 
 // ADMIN IMPORTS
 import Admin from "./pages/admin/Admin";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminQuizzes from "./pages/admin/AdminQuizzes";
+import AdminProfile from "./pages/admin/AdminProfile";
+import AdminBatches from "./pages/admin/AdminBatches";
+// import AdminEnrollment from "./pages/admin/AdminEnrollment";
 function App() {
   return (
     <Routes>
@@ -63,7 +69,18 @@ function App() {
 
       {/* test route */}
       <Route path="/review" element={<Review />} />
-      <Route path="/admin" element={<Admin />} />
+
+      {/* ADMIN PRIVATE ROUTE */}
+
+      <Route path="/admin">
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="quizzes" element={<AdminQuizzes />} />
+        <Route path="profile" element={<AdminProfile />} />
+        <Route path="batches" element={<AdminBatches />} />
+
+        {/* <Route path="/admin/enrollments" element={<AdminEnrollment />} /> */}
+      </Route>
     </Routes>
   );
 }

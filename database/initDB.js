@@ -20,6 +20,8 @@ import {
   createCustomTestAttempts,
 } from "./tables/quizTables.js";
 
+import { createNotificationsTable } from "./tables/notificationTables.js";
+
 const initDB = async () => {
   // Create users table
   await createUsersTable();
@@ -53,6 +55,8 @@ const initDB = async () => {
   // Questions Table
   await createQuestionTable;
 
+  // Notifications Table
+  await createNotificationsTable();
   // =========================
   // Question Bank Attempts Table
   // =========================

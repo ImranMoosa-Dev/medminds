@@ -19,7 +19,7 @@ const AdminLayout = ({
         <title>{title}</title>
       </Helmet>
       <AdminHeader />
-      <main style={{ minHeight: "70vh" }}>{children}</main>
+      <main>{children}</main>
     </div>
   );
 };

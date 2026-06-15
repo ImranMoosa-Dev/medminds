@@ -190,7 +190,7 @@ button {
        TAB PANELS
     ══════════════════════════════════════════ */
 .tab-panel {
-  display: none;
+  /* display: none; */
 }
 .tab-panel.active {
   display: block;

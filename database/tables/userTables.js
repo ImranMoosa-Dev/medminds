@@ -35,6 +35,10 @@ export const createUsersTable = async () => {
       ON DELETE SET NULL
     )
   `);
+  //   await db.execute(`
+  //   ALTER TABLE users
+  // ADD COLUMN role ENUM('admin', 'student') NOT NULL DEFAULT 'student',
+  // ADD COLUMN last_login DATETIME NULL`);
   console.log("Users table ready");
 };
 
